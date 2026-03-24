@@ -101,7 +101,7 @@ configure.mjs             # Renders generated prompt files from config + templat
 During actual research and writing sessions, the project creates working files in the repository root. Typical artifacts include:
 
 - `project.yaml`: central state file for topic, items, and statuses
-- `research/plan.md`: current research plan and story arc
+- `research/plan.md`: current research plan, story arc, and approach principles
 - `research/notes/`: PI-owned research notes and contribution assessments
 - `research/work/`: worker deliverables produced during `/run`
 - `paper/`: outlines, section drafts, and integrated drafts produced during `/write`

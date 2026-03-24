@@ -42,7 +42,6 @@ research/
     index.md               # Entry point. Note list, research directions, file guide
     {any}.md               # Notes freely created/organized by PI as research requires
   plan.md                 # Research plan (managed by PI)
-  feedback.md              # Feedback from meetings (/meeting writes, PI reads)
   agenda.md                # Agenda for next meeting (PI writes, /meeting reads)
   reading_list.md          # Literature list
   papers/{id}/             # Downloaded paper sources
@@ -139,18 +138,17 @@ Resolved items can be described in the paper. Partial items are either described
 ## Session Start
 
 1. Read `logs/last_session.md` (if it exists — understand the previous session's thinking, decisions, and next directions)
-2. Read `research/feedback.md` (if it exists — check meeting feedback with top priority)
-3. Read `project.yaml`
-4. Read `research/notes/index.md` (if it exists. Read topic files as needed)
-5. Read `research/plan.md` (if it exists)
-6. Read `research/reading_list.md`
-7. Read worker deliverables as needed
+2. Read `project.yaml`
+3. Read `research/notes/index.md` (if it exists. Read topic files as needed)
+4. Read `research/plan.md` (if it exists)
+5. Read `research/reading_list.md`
+6. Read worker deliverables as needed
 
 **Unread paper principle:** For papers marked `unread` in reading_list.md, PI must not describe their content, claims, methods, or results (even if PI's training data contains knowledge, information from unread sources is unverified and unreliable). Only the arXiv ID, title, authors, and a one-sentence abstract summary may be stated (see `.claude/common.md` verification procedures). If there are ★★★ and unread papers, run reader with top priority in the first cycle
 
 **Feedback processing:**
 - If `research/plan.md` contains `> [Meeting ...]` markers: A direction change was decided in a meeting. **Read and understand the reason for the change before starting work.** Do not revert plan.md changes. Understood annotations may be naturally cleaned up during work
-- If `research/feedback.md` exists: Instructions regarding stance and approach. Work accordingly. Delete feedback.md after incorporating it
+- In the **Approach Principles** section of `research/plan.md`: Cross-step principles agreed in meetings. Follow them throughout the entire session. PI must not change this section unilaterally; changes are decided in meetings
 
 **Initial check:**
 - topic is empty → Display "Please set a theme via `/meeting`" and stop
@@ -167,6 +165,9 @@ Resolved items can be described in the paper. Partial items are either described
 Step 1: [what] — [why] [status, item_id]
 Step 2: [what] — [why] [status, item_id]
 ...
+
+## Approach Principles
+[Cross-step principles for how to advance the research. Meeting-derived principles should be recorded with `> [Meeting YYYY-MM-DD] {reason for change}` markers. Leave empty if none yet]
 
 ## Strategy Notes
 [Current approach, reasons for pivots, next focus]
@@ -193,7 +194,7 @@ Step 2: [what] — [why] [status, item_id]
 
 #### Thinking flow:
 
-1. **Check the big picture**: Review plan.md and project.yaml. "How far can the paper's story be told now? Where does it break off?"
+1. **Check the big picture**: Review plan.md (including `Thesis`, `Story Arc`, and `Approach Principles`) and project.yaml. "How far can the paper's story be told now? Where does it break off?"
 2. **Story coherence**: Re-examine the why of each Story Arc step. "Why is this step needed after the previous one? How does it connect to the next?" If a step's why is unclear, fix the story itself before filling gaps
 3. **Identify gaps**: Where the story breaks off = the most important gap. Check existing items while creating new items with appropriate kinds for newly identified gaps
 4. **Design tasks with kind in mind**: Don't make everything a question. For conjecture, "search for refutation"; for caution, "find problems"; for example, "calculate the concrete case" — kind directly becomes the cognitive mode instruction to the researcher

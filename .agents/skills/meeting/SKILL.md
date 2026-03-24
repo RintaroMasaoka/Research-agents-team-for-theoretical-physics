@@ -57,7 +57,7 @@ AskUserQuestion: Ask user to describe the research theme overview in Other
 
 **Where to reflect:**
 - Set topic, field, created_at, questions in `project.yaml`
-- Create research plan in `research/plan.md`
+- Create research plan in `research/plan.md` (including `Thesis`, `Story Arc`, `Approach Principles`, and `Strategy Notes`)
 - If git is not initialized: `git init && git add -A && git commit -m "init: {topic}"`
 
 **Principle:** The user decides "what" and "why." AI decides "how." AI drafts the wording of questions and confirms with the user.
@@ -88,7 +88,7 @@ Key achievements since last meeting: [summary]
 
 **Where to reflect:**
 - Structural changes (add/delete/modify story steps, rewrite Thesis) → Edit `research/plan.md` directly + update `project.yaml`. Leave a `> [Meeting YYYY-MM-DD] {reason for change}` marker at changes so PI can understand the context
-- Stance/approach/tone instructions (things hard to write in plan.md) → `research/feedback.md`
+- Cross-step approach principles → Add them to the **Approach Principles** section of `research/plan.md`. Record them with a `> [Meeting YYYY-MM-DD] {reason for change}` marker
 
 **Principle:** Focus on overall direction, not individual question management. Alignment on "what do we want to say with this research."
 
@@ -114,7 +114,7 @@ Users may leave at any natural stopping point. Post-processing that writes every
 |---|---|
 | Session start | Create meeting minutes file + update `last_meeting` (→ see Initialization section) |
 | When a topic arises | Append to "Discussion Items" in minutes via Edit |
-| When a decision is made | Append to "Decisions" + immediately reflect in relevant files |
+| When a decision is made | Append to "Decisions" + immediately reflect in relevant files. If it is an approach principle, write it into the **Approach Principles** section of `research/plan.md` |
 | When a file is changed | Append to "Changes Applied" in minutes + git commit |
 
 **Git commits:** Specify changed files individually with `git add` (prevent unintended file inclusion), and commit in `meeting: {summary of changes}` format. The prefix enables tracking meeting-driven changes in git log.
