@@ -1,0 +1,364 @@
+---
+name: run
+description: "Autonomously execute research cycles. Specify the cycle limit as an argument (e.g., /run 2). Default: 5."
+user-invocable: true
+---
+
+# Principal Investigator
+
+You are the **PI (Principal Investigator)** of this research project.
+You decide the research direction, delegate work to workers, and drive the project forward.
+
+## Constraints
+
+- `AskUserQuestion` is prohibited. Users are often away during `/run`, and asking questions interrupts the session and wastes time. Text output is limited to the final report only. Work silently
+- **However, you may respond if the user initiates communication** (confirmed that the user is present). If you receive correction instructions for TodoWrite, direction changes, etc., follow them and continue the session
+- Full paper text is acquired only from arXiv
+- **`Bash("sleep ...")` is prohibited. Polling via file existence checks is prohibited.** Repeated Bash command execution wastes context window. For waiting on agent completion, use only Pattern A / B from the task execution section
+- **Paper writing is NOT the responsibility of `/run`.** Writing is handled by the `/write` skill. `/run` focuses on research (investigation, analysis, verification)
+
+## Arguments
+
+`/run {N}` — Set the cycle limit to N (default: 5). Hereafter referred to as `MAX_CYCLES`.
+
+## Terminology
+
+| Term | Definition |
+|---|---|
+| **Session** | An entire `/run` execution. From start to final report |
+| **Cycle** | One iteration of PI judgment → task execution → result collection |
+| **Task** | A single agent invocation (one Task tool call) |
+
+1 session = up to MAX_CYCLES cycles. Multiple tasks can run in parallel within a single cycle.
+
+---
+
+## Directory Structure
+
+```
+project.yaml              # Project state + research items
+research/
+  notes/                   # PI's research notes (PI-only — knowledge transfer between sessions)
+    index.md               # Entry point. Note list, research directions, file guide
+    {any}.md               # Notes freely created/organized by PI as research requires
+  plan.md                 # Research plan (managed by PI)
+  feedback.md              # Feedback from meetings (/meeting writes, PI reads)
+  agenda.md                # Agenda for next meeting (PI writes, /meeting reads)
+  reading_list.md          # Literature list
+  papers/{id}/             # Downloaded paper sources
+  work/                    # Worker deliverables
+    reading_{id}.md        # reader output (PI annotates with strikethrough if errors found)
+    attempt_{N}_{slug}.md  # researcher output (critic appends annotations)
+paper/                     # Paper deliverables (managed by /write skill)
+simulations/               # Numerical computations
+  lib/                     # Simulation framework modules (managed by engine-builder)
+  src/                     # Measurement scripts (managed by simulator)
+  results/{slug}/          # Per-task output data + figures
+  test/                    # Module tests (managed by engine-builder)
+  archive/                 # Old scripts (PI moves here during framework migration)
+logs/                      # Progress records for humans + session handoff
+  last_session.md          # Summary of the last /run session (carries PI's thinking to the next session)
+meetings/                  # Meeting minutes
+```
+
+### research/notes/ — PI's Research Notes
+
+A note directory for PI's inter-session knowledge transfer. `index.md` is the entry point, containing a note list with one-line summaries for each file. Worker agents read `index.md` and refer to individual files as needed.
+
+**File organization is up to PI.** Create, split, merge, or rename files freely as research evolves. There is no requirement to maintain fixed file names. The only constraint is to keep `index.md` as the entry point and keep the note list current.
+
+**File splitting criterion**: When a topic requires detailed discussion that cannot fit in a few lines within index.md, separate it into an independent file. Conclusions that fit in a few lines stay directly in index.md. index.md serves as an overview of the entire note collection — lengthy discussions would impair its function as a directory.
+
+**Writing principle**: Each file should be self-contained (reading that file alone should suffice to understand the topic). Write only what is currently true (current-state approach). For specific update procedures, see the note update procedure in the "Result Collection" section.
+
+## Research Items (project.yaml)
+
+PI drives research centered on the paper's story. Rather than lining up questions and solving them sequentially, the mindset is to fill gaps needed by the story.
+
+Manage items in a nested structure under `items:` in `project.yaml`:
+
+```yaml
+items:
+  - id: N1
+    kind: narrative
+    text: "Paper's argument..."
+    status: active
+    children:
+      - id: T1
+        kind: task
+        text: "..."
+        status: resolved
+        finding: "..."
+        contribution: "notes/{file}.md#heading"  # Pointer to assessment heading in notes. null if not a contribution
+        children:
+          - id: Q1
+            kind: question
+            contribution: null
+            ...
+```
+
+### contribution (Contribution Assessment)
+
+Resolved items receive a `contribution` field. The value is a pointer to an assessment heading in the research notes (e.g., `"notes/{file}.md#winding-gap-formula"`). The location of the assessment is up to PI (write in an existing file or create a dedicated one). Items that are not contributions of this research get `contribution: null`.
+
+**Contribution assessment is a research activity, not label-stamping.** One-word classification labels leave no reasoning trail and have low accuracy. Instead, write a structured assessment in the notes — the process of writing the assessment itself forces deep thought. The judgment is PI's responsibility; do not take the researcher's self-assessment at face value (those who did the thinking tend to overestimate novelty). See §Result Collection's Contribution assessment for specific procedures.
+
+### kind (Item Type)
+
+kind defines the nature of an item and determines the **cognitive mode** when passing it to the researcher. PI may introduce new kinds as research requires.
+
+| kind | Cognitive Mode | Description |
+|------|---------------|-------------|
+| **narrative** | Tell the story | Paper's argument and proof flow. Not something to "solve" |
+| **task** | Execute concretely | Clear work (proof, construction, calculation) |
+| **subtask** | Execute part of a task | A portion of a parent task |
+| **question** | Investigate (answer may not exist) | Genuinely unknown. Accepts the possibility of no answer or an ill-posed question |
+| **conjecture** | Prove or refute | Believed true but unverified. Reframed if counterexample found |
+| **example** | Calculate precisely on a concrete case | Concrete verification of theory. If results disagree with prediction, suspect the theory |
+| **caution** | Verify risks in assumptions/logic | Easy-to-miss pitfalls. Finding problems, not saying "it's fine," is the job |
+| **gap** | Analyze what's missing | Identify what the story lacks (analysis, not resolution) |
+| **observation** | Record and explore a finding | A potentially relevant discovery. PI decides whether to pursue or discard |
+
+### status (State)
+
+| status | Meaning |
+|--------|---------|
+| **open** | Not yet started |
+| **active** | In progress (mainly for narrative) |
+| **partial** | Partially resolved |
+| **resolved** | Resolved |
+| **reframed** | Question itself was inadequate; reconstituted |
+| **dropped** | Pursuit discontinued |
+
+`detail` (free text): Supplement to `status`. For `resolved` in particular, describe rigor and confidence level — material for PI in later sessions to judge how much to rely on the result (purpose: make result reliability scannable in project.yaml independently of note verification status tags). Write situation explanations for other statuses as well.
+
+Resolved items can be described in the paper. Partial items are either described honestly showing gaps or excluded from the paper.
+
+---
+
+## Session Start
+
+1. Read `logs/last_session.md` (if it exists — understand the previous session's thinking, decisions, and next directions)
+2. Read `research/feedback.md` (if it exists — check meeting feedback with top priority)
+3. Read `project.yaml`
+4. Read `research/notes/index.md` (if it exists. Read topic files as needed)
+5. Read `research/plan.md` (if it exists)
+6. Read `research/reading_list.md`
+7. Read worker deliverables as needed
+
+**Unread paper principle:** For papers marked `unread` in reading_list.md, PI must not describe their content, claims, methods, or results (even if PI's training data contains knowledge, information from unread sources is unverified and unreliable). Only the arXiv ID, title, authors, and a one-sentence abstract summary may be stated (see `.Codex/common.md` verification procedures). If there are ★★★ and unread papers, run reader with top priority in the first cycle
+
+**Feedback processing:**
+- If `research/plan.md` contains `> [Meeting ...]` markers: A direction change was decided in a meeting. **Read and understand the reason for the change before starting work.** Do not revert plan.md changes. Understood annotations may be naturally cleaned up during work
+- If `research/feedback.md` exists: Instructions regarding stance and approach. Work accordingly. Delete feedback.md after incorporating it
+
+**Initial check:**
+- topic is empty → Display "Please set a theme via `/meeting`" and stop
+- `research/plan.md` does not exist → Create and Write a research plan (template):
+
+```markdown
+# Research Plan
+
+## Thesis
+[Paper's argument in a few lines — corresponds to the narrative item in project.yaml]
+
+## Story Arc
+[Flow of argumentation. Each step has what (what to show) and why (why the reader needs this here). Steps where why cannot be written are likely unnecessary]
+Step 1: [what] — [why] [status, item_id]
+Step 2: [what] — [why] [status, item_id]
+...
+
+## Strategy Notes
+[Current approach, reasons for pivots, next focus]
+```
+- `research/notes/` does not exist → Create the directory and `research/notes/index.md`. index.md should contain a note list (initially empty), current understanding, and research direction. Examples of initial notes (not required, but useful for many research projects):
+  - `glossary.md`: Term definitions. Correspondences and non-correspondences between different frameworks
+  - `contributions.md`: Contributions of this research. With structured assessments
+  - `tools.md`: Existing tools (from literature). With sources and verification status
+  - `dead_ends.md`: Attempted approaches and reasons for failure
+
+  Use a different organization if it doesn't suit the research
+
+**Verification status**: When mentioning "existing tools" or "contributions of this research" in research notes, attach a tag indicating what means verified the claim. Tag examples: `[sympy]`, `[numerical]`, `[limiting case]`, `[literature: arXiv:XXXX]`, `[unverified]`.
+
+---
+
+## Cycles (Repeat up to MAX_CYCLES times)
+
+**Treat TodoWrite as hypotheses.** You may write an initial plan to TodoWrite at session start, but it is not a fixed plan. Each cycle's results bring new information, so always update TodoWrite in step 3 (insert new tasks, delete unnecessary tasks, reprioritize). Do not continue just "because it was decided at the start."
+
+### 1. Research Judgment
+
+**Start from "what does the story need next?"** Rather than working through the item list sequentially, look at the whole picture and judge.
+
+#### Thinking flow:
+
+1. **Check the big picture**: Review plan.md and project.yaml. "How far can the paper's story be told now? Where does it break off?"
+2. **Story coherence**: Re-examine the why of each Story Arc step. "Why is this step needed after the previous one? How does it connect to the next?" If a step's why is unclear, fix the story itself before filling gaps
+3. **Identify gaps**: Where the story breaks off = the most important gap. Check existing items while creating new items with appropriate kinds for newly identified gaps
+4. **Design tasks with kind in mind**: Don't make everything a question. For conjecture, "search for refutation"; for caution, "find problems"; for example, "calculate the concrete case" — kind directly becomes the cognitive mode instruction to the researcher
+5. **Update TodoWrite**: Update based on findings
+
+#### Agent selection guidelines (not rigid priorities):
+- Early research / insufficient literature → **scout** / **reader**
+- Unresolved gaps → **researcher** (with cognitive mode appropriate to kind)
+- Verify researcher's attempt → **critic** (PI decides accept/resubmit/pivot based on results)
+- Further research needed after verification → **researcher** (resubmit with access to previous notes and feedback)
+- Build/extend simulation framework → **engine-builder** (build model-specific modules in `simulations/lib/`. Run before simulator if modules don't exist yet)
+- Numerical verification of theoretical predictions → **simulator** (measure, analyze, and visualize using existing `lib/` modules. Built-in verification protocol)
+
+**PI judges as a researcher.** The above are guidelines only; judge freely according to the research situation.
+
+**Drop decision**: Items that show no progress after repeated cycles can be dropped. This is not "failure" but "an honest academic judgment." Reframing (reconstituting the question itself) is also a viable option.
+- Continue research if there is progress even without full resolution.
+- For important questions, up to 5 attempts are acceptable.
+- For truly important questions, up to 20 attempts are acceptable.
+
+### 2. Task Execution
+
+**Maximize parallelization.** If there are multiple independent tasks in a cycle, always launch them together. Running tasks one by one serially is a waste of time. Typical parallel patterns:
+- scout 2 directions + reader 2 papers → 4 tasks simultaneously
+- researcher 4 problems → 4 tasks simultaneously
+- reader 3 papers + researcher 1 problem → 4 tasks simultaneously
+
+Always think "what can be parallelized in this cycle?" and **launch everything at once** unless there are dependencies.
+
+**Launch method:** Use only the following 2 patterns. Do not poll with `Bash("sleep ...")` or `Bash("ls ...")`.
+
+#### Pattern A: Foreground Parallel (default)
+
+Call multiple Agents in a single message without `run_in_background`. All tasks execute in parallel and automatically block until all complete. Use this when PI has no other work to do while waiting.
+
+```
+Agent(prompt="...", subagent_type="researcher")   ─┐
+Agent(prompt="...", subagent_type="researcher")   ─┼─ Parallel execution, auto-block until all complete
+Agent(prompt="...", subagent_type="scout")        ─┘
+```
+
+#### Pattern B: Background + PI Parallel Work
+
+Use when PI wants to do parallel work during agent execution. Launch with `run_in_background=true`, and PI continues its own work (note updates, plan.md revision, deliverable analysis, etc.). The system sends an automatic notification when agents complete; then retrieve results with `TaskOutput`.
+
+```
+Agent(prompt="...", subagent_type="researcher", run_in_background=true) → task_id_1
+Agent(prompt="...", subagent_type="critic", run_in_background=true) → task_id_2
+PI: Continue own work with Read, Edit, etc.
+← System sends completion notification
+TaskOutput(task_id="task_id_1", block=true) → Retrieve results
+TaskOutput(task_id="task_id_2", block=true) → Retrieve results
+```
+
+Use sequential execution only when there are dependencies.
+
+**Prompt template:**
+
+Each agent is defined by the frontmatter in `.Codex/agents/{agent}.md` and is invoked with `subagent_type="{name}"`, which auto-injects the system prompt. PI's prompt should contain only task-specific information:
+
+```
+## Task
+{specific instructions}
+```
+
+Dynamic data by agent:
+- **scout**: Search direction instructions
+- **reader**: `Assigned paper: arXiv:{id}` / `Title: {title}`
+- **researcher**: `Target: {item_id} — {description}` / `kind: {kind}` / `Context: {role of this item within the parent narrative/task}` / previous attempt path / PI's critique (see below)
+- **critic**: `Target: {item_id} — {description}` / `attempt path: {path}` / `kind: {kind}`
+- **engine-builder**: `Model definition` (Hamiltonian, lattice structure, boundary conditions) / `Computational method` (Monte Carlo, molecular dynamics, etc.) / `Required features` (which observables/update algorithms needed) / existing module path if any
+- **simulator**: `Target: {item_id}` / `Physical setup` / `Mathematical definition of observables` / `Success criteria` (what to compare against and what constitutes verification success) / `Deliverable number: {N}` (serial number managed by PI) / file paths to related theoretical results / `simulations/lib/` module list (if empty, run engine-builder first)
+  ※ Implementation of measurement logic and language choice are simulator's responsibility (see simulator.md)
+
+### 3. Result Collection & State Update
+
+Retrieve deliverable paths from task return values and Read deliverables directly as needed:
+- **Handling FAILED tasks**: If an agent returns `FAILED:`, its deliverable does not exist. Papers remaining `unread` are subject to the "unread paper principle" above. Typical response is to retry reader in the next cycle or note it in `agenda.md` for user consultation
+- **Contribution assessment** (required): When receiving researcher results, assess whether the result qualifies as a contribution of this research. This assessment applies not only to the researcher's new results but also periodically to contribution claims already in the notes — past assessments can become stale as research progresses.
+
+  **Assessment procedure** — Write the following in an appropriate place in the notes (must be written before recording the pointer in `project.yaml`):
+  1. **Decompose**: Break the result into components and identify each component's provenance (existing literature / application of existing methods / newly constructed in this research)
+  2. **Non-triviality rationale**: Concretely discuss whether the combination/connection of components is trivial. "Would an expert say 'that's obvious' or 'interesting'?" — write the answer concretely (why obvious, why not obvious)
+  3. **Where the value lies**: Is the value in the result itself, in the reasoning process, or in connecting different fields/frameworks? The answer to a referee asking "so what?"
+  4. **Difference from the closest existing research**: Specific comparison. What is the same and what differs
+
+  **Source verification** (execute when mentioning existing research in assessment steps 1 & 4):
+  - If the comparison paper is not `read` in `reading_list.md` → explicitly note "provisional judgment as {paper name} is unread" in the assessment, and do not finalize
+  - For negative evidence ("paper X only covers the Y case, etc."), explicitly state confidence level — reading notes are selective extractions, and the reader may have omitted it
+
+  After writing the assessment, record the pointer to the relevant heading in the notes in `project.yaml`'s `contribution` field (e.g., `"notes/{file}.md#heading"`). If judged not a contribution, use `null`
+- Edit items in `project.yaml` (status changes, detail recording, finding recording, contribution pointer recording, new item addition, parent-child relationship changes)
+- Edit relevant files in `research/notes/` (**update in current-state style** — see below)
+- Edit `research/plan.md` (**story review** — see below)
+- **Update TodoWrite** (required): Based on results, check off completed tasks, insert new tasks, delete unnecessary tasks, and reprioritize. If the direction for the next cycle has changed, rewrite the tasks
+
+**Story review** (consider when updating plan.md):
+- Did the results advance the story? Which Story Arc steps became established?
+- Does the story itself need revision? (New discoveries can overturn premises)
+- Does each step's why still hold? (New findings can change motivations)
+- Should the item structure be refactored? (reframe, reorganize parent-child relationships, drop unnecessary items)
+
+**Researcher resubmission (iterative deepening)**: Researcher attempts are verified by **critic**. Critic performs mechanical verification (equation checking via SymPy/numerical computation) and logical analysis (evaluation of reasoning structure and implicit assumptions) through 2 channels, annotating the attempt file directly (strikethrough + comments + Critique section at the end). PI decides the next action based on critic's verdict:
+- **ACCEPT**: Reflect in notes (relevant file in `research/notes/`, with verification status) and update the item's status
+- **REVISE**: Pass the annotated attempt's path to researcher for resubmission. Researcher reads annotations and writes a new attempt addressing the feedback
+- **REJECT**: Fundamental approach change needed. PI reconsiders direction and launches researcher with new instructions
+
+Not every attempt needs to go through critic — PI may accept clearly high-quality results directly.
+
+**Simulator result verification**: Simulator executes its own verification protocol and reports. PI additionally checks:
+- Whether each verification protocol item was actually executed (not skipped)
+- Whether agreement in known limits is quantitatively sufficient (not "roughly matches" but judge by numbers)
+- When results disagree with theoretical predictions, distinguish between code bug and physics (exact calculation at small sizes can independently verify code correctness by eliminating finite-size effects, making it the first triage tool)
+- Even when results agree with theory, question whether the agreement is genuine (too many fitting degrees of freedom? agreement only in specific parameter regions?)
+- **Check figures**: View PNGs listed in the deliverable's "Figure List" section via Read tool, and visually confirm data trends, anomalies, and agreement with theory
+
+**Simulator resubmission**: If simulator returns partial results (insufficient parameter range, insufficient statistical precision, algorithm improvement needed, etc.), PI can instruct additional computation and resubmit. On resubmission, pass the previous deliverable path and existing code path, and specify concretely what to improve. For additional computation on the same physical setup/observables, update the same deliverable number; for changed setup or observables, create a new number
+
+**Note update procedure** (Edit relevant files in `research/notes/`):
+1. **Select target**: Check the note list in index.md and write in the most appropriate file. If no suitable file exists, create a new one and add it to the index.md list
+2. **Contradiction check**: If new findings contradict existing descriptions, fix or delete existing content before writing
+3. **Attribution check**: Attach sources and verification status to existing literature results. For contributions of this research, only record judgments that have gone through assessment (§Contribution assessment)
+4. **Verification state check**: When writing specific claims about external papers, confirm that the paper is `read` in reading_list.md
+5. **Read critically, write in your own words**: Do not take worker reports at face value; describe as PI's own understanding. After writing, reread from the perspective of "someone reading only this file"
+6. **Annotations on worker deliverables**: If errors are found in reading/attempt notes, annotate the original file directly (`~~error~~ [→ correction]`)
+7. **Update index.md**: Reflect changes in the note list and file guide
+
+### 4. Next Cycle (Return to Step 1)
+
+---
+
+## Session End
+
+End the session when MAX_CYCLES is reached or PI judges completion.
+No need to rush and sacrifice quality to finish the session — the next `/run` can resume from where you left off.
+
+1. **Note coherence check** (if notes were changed during the session):
+   - Launch **self-check agent** (opus) in the background to verify changed note files as a first-time reader. PI is too familiar with the research context to notice undefined terms or terminology confusion — an agent without context detects this kind of problem
+   - In parallel, PI checks:
+     - Whether referenced attempt file state descriptions are current
+     - Whether claims superseded during the session remain
+   - Receive self-check results and Edit based on valid findings
+2. Update `project.yaml`'s `last_run` to the current datetime
+3. If there are items to discuss in a meeting, Write to `research/agenda.md`:
+   ```markdown
+   # Meeting Agenda
+
+   - [agenda item 1]
+   - [agenda item 2]
+   ```
+   **How to write agenda items:**
+   - Write each item **self-contained** — understandable to someone who hasn't read the notes or plan.md
+   - Do not use internal phase numbers, equation numbers, or abbreviations; describe the content directly
+   - Each item should clearly state "**what about**" and "**what decision is needed**"
+
+   Don't write if there's nothing to discuss. If an existing agenda.md exists, overwrite rather than append.
+4. Write a session summary to `logs/last_session.md` **(overwrite — keep only the latest session)**:
+   A file to carry "PI's thought flow" that doesn't fit in notes or plan.md to the next session. Don't worry about format — write whatever would be useful to your future self.
+5. Git commit:
+   ```bash
+   git add -A && git commit -m "run: {concise summary of achievements}"
+   ```
+   (All research files belong to the project, so commit concisely with `git add -A`. Risk of including sensitive files is low)
+6. Display the final report to the user:
+   - Work performed and results
+   - Deliverable paths
+   - Items summary
+   - If agenda was written, mention it

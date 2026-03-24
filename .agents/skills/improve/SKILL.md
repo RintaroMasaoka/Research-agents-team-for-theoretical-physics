@@ -1,0 +1,105 @@
+---
+name: improve
+description: "Improve agent prompts and behavior. Follows a flow of gathering complaints → making fixes → verification to ensure quality."
+user-invocable: true
+argument-hint: "[complaint (optional)]"
+---
+
+# System Improvement
+
+Improve the output quality of agents and skills. The user just describes "what's unsatisfactory." AI designs and executes the fix, and an independent agent verifies quality.
+
+Arguments: $ARGUMENTS
+
+---
+
+## Flow
+
+```
+Argument provided → Treat as complaint → Confirm nuances → Execute fix
+No argument → AskUserQuestion to clarify intent (3 choices + Other for free-form complaint)
+
+1. "Review the whole system":
+    ▼ Data loading: all agent definitions + SKILL.md files
+    ▼ AI reviews and presents improvement points
+    ▼ AskUserQuestion: select which improvements to adopt
+    ▼ Execute fix
+
+2. "Review a specific target":
+    ▼ AskUserQuestion: ask user to specify the target (agent name, skill name, file path, etc.)
+    ▼ Data loading: only the relevant file(s)
+    ▼ AI reviews and presents improvement points
+    ▼ AskUserQuestion: select which improvements to adopt
+    ▼ Execute fix
+
+3. Has a specific complaint (described in Other):
+    ▼ Data loading: only files related to the complaint
+    ▼ Align on nuances with the user before deciding the fix approach
+    ▼ Execute fix
+```
+
+**Where to reflect:** Agents → `.Codex/agents/{agent}.md` / Workflows → `.Codex/skills/{skill}/SKILL.md`
+
+---
+
+## Executing the Fix
+
+### 1. Rewrite
+
+Rewrite the target file entirely with Write. Prompt files are small (typically < 200 lines), and improvements often involve structural changes. Generating the entire file at once makes it easier to maintain whole-file coherence.
+
+Guidelines for rewriting (see Prompt Design Spec for architecture principles):
+- Describe the correct approach naturally. Instead of "don't do X" (prohibition), write what should be done
+- Write proportionally to the importance of the fix. Don't use a paragraph for a one-line fix
+- Add reasons to instructions. With reasons, AI can judge edge cases. Without reasons, instructions become rigid dogma
+
+### 2. Verification Agent
+
+Have a `subagent_type: "reviewer"` Agent verify the rewritten file. The reviewer verifies the target read-only and only flags issues, providing an independent perspective from the person who made the fix. The fixer knows the problem's context and is thus less likely to notice coherence issues. Have an agent "verify whole-file coherence as a first-time reader" without that context.
+
+Prompt:
+```
+Read the prompt file as a first-time reader and flag issues from the following perspectives.
+
+Target file: {path}
+
+Pay special attention to: {areas changed in this fix}
+
+## Verification Criteria
+
+1. **Traces**: References to past incidents or specific examples that remain.
+   Descriptions that would make a first-time reader wonder "why this example?"
+2. **Balance**: Specific sections emphasized disproportionately to their importance.
+   Paragraphs that feel like they were added later
+3. **Instructions without reasons**: Directives that say "do this" without explaining "why"
+4. **Duplication / scatter**: Same point scattered across multiple locations
+
+Include a quote of the relevant passage and a suggested improvement for each finding.
+If no issues are found, report "No issues found."
+```
+
+### 3. Reflect Verification Results
+
+Report the verification agent's findings to the user, and fix any valid findings.
+
+### 4. User Confirmation
+
+Get approval from the user via AskUserQuestion before committing.
+
+---
+
+## Prompt Design Spec
+
+Architecture principles for prompt files. Check these are satisfied when rewriting.
+
+1. Separation of concerns — Each file covers only its own responsibilities. Common rules go in `.Codex/common.md` once only
+2. Low coupling — Minimize dependencies between files
+3. File-path communication — Instead of loading raw data into prompts, write to files and pass paths (prevents prompt bloat and enables data reuse)
+
+---
+
+## Git Commit
+
+After reflecting fixes, git commit.
+- Specify changed files individually with `git add` (prevent unintended file inclusion)
+- Message format: `improve: {summary of changes}`
