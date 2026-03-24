@@ -1,0 +1,72 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(su:*)",
+
+      "Bash(brew:*)",
+      "Bash(port:*)",
+
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pip uninstall:*)",
+      "Bash(pip3 uninstall:*)",
+      "Bash(npm install -g:*)",
+      "Bash(npm uninstall -g:*)",
+      "Bash(gem install:*)",
+      "Bash(cargo install:*)",
+      "Bash(go install:*)",
+      "Bash(conda:*)",
+      "Bash(pipx:*)",
+
+      "Bash(nvm:*)",
+      "Bash(pyenv:*)",
+      "Bash(rbenv:*)",
+      "Bash(rustup:*)",
+
+      "Bash(kill:*)",
+      "Bash(killall:*)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)",
+
+      "Bash(launchctl:*)",
+      "Bash(osascript:*)",
+      "Bash(defaults:*)",
+      "Bash(diskutil:*)",
+      "Bash(networksetup:*)",
+      "Bash(systemsetup:*)",
+      "Bash(softwareupdate:*)",
+      "Bash(scutil:*)",
+      "Bash(pmset:*)",
+      "Bash(nvram:*)",
+      "Bash(csrutil:*)",
+      "Bash(spctl:*)",
+      "Bash(dscl:*)",
+      "Bash(security:*)",
+
+      "Bash(crontab:*)",
+      "Bash(mount:*)",
+      "Bash(umount:*)",
+      "Bash(dd:*)",
+      "Bash(mkfs:*)",
+      "Bash(fdisk:*)",
+
+      "Bash(docker:*)",
+      "Bash(kubectl:*)",
+      "Bash(terraform:*)",
+      "Bash(vagrant:*)",
+      "Bash(ansible:*)",
+
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(sftp:*)",
+      "Bash(nmap:*)",
+      "Bash(nc:*)",
+      "Bash(netcat:*)",
+
+      "Bash(chmod:*)",
+      "Bash(chown:*)",
+      "Bash(chflags:*)"
+    ]
+  }
+}
