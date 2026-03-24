@@ -60,6 +60,14 @@ logs/                      # Progress records for humans + session handoff
 meetings/                  # Meeting minutes
 ```
 
+### Writing principle — current-state, not history
+
+Applies to all PI-managed documents (notes, plan.md, index.md). Each file should be self-contained (reading that file alone should suffice to understand the topic). Write only what is currently true — the document represents the present understanding, not a log of how that understanding evolved. Specifically:
+- State conclusions and their evidence directly. Do not narrate the path ("Session 10 found X, then Session 11 revised to Y") — just state Y with its evidence
+- Meeting annotations (`> [Meeting ...]`) are temporary markers for direction changes. Once the direction change is understood and reflected in the content, remove the annotation — the content itself is the record
+- File guides should list only current, valid references. Remove entries for superseded or rejected deliverables
+- If a research direction was abandoned, a one-line note in `dead_ends.md` suffices. Do not preserve detailed step histories
+
 ### research/notes/ — PI's Research Notes
 
 A note directory for PI's inter-session knowledge transfer. `index.md` is the entry point, containing a note list with one-line summaries for each file. Worker agents read `index.md` and refer to individual files as needed.
@@ -68,7 +76,7 @@ A note directory for PI's inter-session knowledge transfer. `index.md` is the en
 
 **File splitting criterion**: When a topic requires detailed discussion that cannot fit in a few lines within index.md, separate it into an independent file. Conclusions that fit in a few lines stay directly in index.md. index.md serves as an overview of the entire note collection — lengthy discussions would impair its function as a directory.
 
-**Writing principle**: Each file should be self-contained (reading that file alone should suffice to understand the topic). Write only what is currently true (current-state approach). For specific update procedures, see the note update procedure in the "Result Collection" section.
+For specific update procedures, see the note update procedure in the "Result Collection" section.
 
 ## Research Items (project.yaml)
 
@@ -207,6 +215,7 @@ Step 2: [what] — [why] [status, item_id]
 - Further research needed after verification → **researcher** (resubmit with access to previous notes and feedback)
 - Build/extend simulation framework → **engine-builder** (build model-specific modules in `simulations/lib/`. Run before simulator if modules don't exist yet)
 - Numerical verification of theoretical predictions → **simulator** (measure, analyze, and visualize using existing `lib/` modules. Built-in verification protocol)
+- Verify note/plan readability → **self-check** (has no research context; catches undefined terms and jargon that PI overlooks)
 
 **PI judges as a researcher.** The above are guidelines only; judge freely according to the research situation.
 
@@ -296,6 +305,8 @@ Retrieve deliverable paths from task return values and Read deliverables directl
 - Does the story itself need revision? (New discoveries can overturn premises)
 - Does each step's why still hold? (New findings can change motivations)
 - Should the item structure be refactored? (reframe, reorganize parent-child relationships, drop unnecessary items)
+- **Fact-check existing content**: Claims written in earlier sessions can become stale as scope narrows or findings change. Scan for statements that no longer match the current thesis or scope and fix or remove them
+- **Prune history**: Apply the current-state writing principle (§Writing principle). Completed steps need only their conclusion, and abandoned directions belong in `dead_ends.md`
 
 **Researcher resubmission (iterative deepening)**: Researcher attempts are verified by **critic**. Critic performs mechanical verification (equation checking via SymPy/numerical computation) and logical analysis (evaluation of reasoning structure and implicit assumptions) through 2 channels, annotating the attempt file directly (strikethrough + comments + Critique section at the end). PI decides the next action based on critic's verdict:
 - **ACCEPT**: Reflect in notes (relevant file in `research/notes/`, with verification status) and update the item's status
@@ -315,12 +326,22 @@ Not every attempt needs to go through critic — PI may accept clearly high-qual
 
 **Note update procedure** (Edit relevant files in `research/notes/`):
 1. **Select target**: Check the note list in index.md and write in the most appropriate file. If no suitable file exists, create a new one and add it to the index.md list
-2. **Contradiction check**: If new findings contradict existing descriptions, fix or delete existing content before writing
+2. **Staleness check**: Research evolves and claims that were accurate earlier can become outdated or irrelevant (e.g., general-d statements persisting after the scope narrowed to d=2). When touching a file, scan existing content for claims that no longer match the current research scope, thesis, or findings — not just for direct contradictions with the new result. Fix or delete stale content before writing new content
 3. **Attribution check**: Attach sources and verification status to existing literature results. For contributions of this research, only record judgments that have gone through assessment (§Contribution assessment)
 4. **Verification state check**: When writing specific claims about external papers, confirm that the paper is `read` in reading_list.md
 5. **Read critically, write in your own words**: Do not take worker reports at face value; describe as PI's own understanding. After writing, reread from the perspective of "someone reading only this file"
-6. **Annotations on worker deliverables**: If errors are found in reading/attempt notes, annotate the original file directly (`~~error~~ [→ correction]`)
-7. **Update index.md**: Reflect changes in the note list and file guide
+6. **Prune historical traces**: Apply the current-state writing principle (§Writing principle) to the file being edited
+7. **Annotations on worker deliverables**: If errors are found in reading/attempt notes, annotate the original file directly (`~~error~~ [→ correction]`)
+8. **Update index.md**: Reflect changes in the note list and file guide
+
+**Self-check verification** (after updating notes or plan.md):
+
+Note quality has two layers of verification: **per-cycle self-check** catches jargon and self-containedness issues in individual files, and **session-end coherence check** catches cross-file inconsistencies that only emerge after multiple cycles.
+
+When notes or plan.md were substantially changed in this cycle (new content added or significant rewrites — not minor edits like status tag changes):
+1. Launch **self-check agent** on each changed file (can run in parallel with other agents via Pattern A/B). Pass each file individually — self-check has no research context, which lets it catch jargon and missing definitions that PI (who has full context) would overlook
+2. Review the findings and Edit to fix valid issues before proceeding to the next cycle
+3. Focus on issues that genuinely impede understanding. Not every finding needs a fix — use judgment
 
 ### 4. Next Cycle (Return to Step 1)
 
@@ -331,12 +352,12 @@ Not every attempt needs to go through critic — PI may accept clearly high-qual
 End the session when MAX_CYCLES is reached or PI judges completion.
 No need to rush and sacrifice quality to finish the session — the next `/run` can resume from where you left off.
 
-1. **Note coherence check** (if notes were changed during the session):
-   - Launch **self-check agent** (opus) in the background to verify changed note files as a first-time reader. PI is too familiar with the research context to notice undefined terms or terminology confusion — an agent without context detects this kind of problem
-   - In parallel, PI checks:
+1. **Final coherence check** (if notes or plan.md were changed during the session):
+   - Per-cycle self-checks verify individual files; this step catches cross-file issues. PI checks:
      - Whether referenced attempt file state descriptions are current
      - Whether claims superseded during the session remain
-   - Receive self-check results and Edit based on valid findings
+     - Whether terminology is consistent across files (per-cycle checks cover within-file usage; this catches divergence between files)
+   - If substantial issues are found, run self-check on the affected files and fix before proceeding
 2. Update `project.yaml`'s `last_run` to the current datetime
 3. If there are items to discuss in a meeting, Write to `research/agenda.md`:
    ```markdown
