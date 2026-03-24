@@ -38,7 +38,24 @@ No argument → AskUserQuestion to clarify intent (3 choices + Other for free-fo
     ▼ Execute fix
 ```
 
-**Where to reflect:** Agents → `.claude/agents/{agent}.md` / Workflows → `.claude/skills/{skill}/SKILL.md`
+---
+
+## Template System
+
+This project uses a template-based generation system. Prompt files are generated from templates — editing generated files directly is incorrect because `configure.mjs` overwrites them on each run.
+
+| Layer | Path | Role |
+|---|---|---|
+| **Template (source of truth)** | `.claude/templates/**/*.tmpl` | Edit these |
+| **Generated (do not edit)** | `.claude/agents/*.md`, `.claude/skills/*/SKILL.md`, `.claude/CLAUDE.md`, `.claude/common.md` | Overwritten by `node configure.mjs` |
+| **Config values** | `.claude/config/config.yaml` | Variables substituted into templates via `{{ key }}` syntax |
+
+When reading a target for review, read the `.tmpl` file. When making changes, edit the `.tmpl` file.
+
+**Mapping**: To find the template for a generated file, replace `.claude/` with `.claude/templates/` and append `.tmpl`:
+- `.claude/agents/researcher.md` → `.claude/templates/agents/researcher.md.tmpl`
+- `.claude/skills/run/SKILL.md` → `.claude/templates/skills/run/SKILL.md.tmpl`
+- `.claude/common.md` → `.claude/templates/common.md.tmpl`
 
 ---
 
@@ -46,14 +63,19 @@ No argument → AskUserQuestion to clarify intent (3 choices + Other for free-fo
 
 ### 1. Rewrite
 
-Rewrite the target file entirely with Write. Prompt files are small (typically < 200 lines), and improvements often involve structural changes. Generating the entire file at once makes it easier to maintain whole-file coherence.
+Edit the target `.tmpl` file. For structural changes or large rewrites, use Write to replace the entire file — prompt files are small (typically < 200 lines), so whole-file regeneration maintains coherence. For localized fixes, Edit suffices.
 
 Guidelines for rewriting (see Prompt Design Spec for architecture principles):
 - Describe the correct approach naturally. Instead of "don't do X" (prohibition), write what should be done
 - Write proportionally to the importance of the fix. Don't use a paragraph for a one-line fix
 - Add reasons to instructions. With reasons, AI can judge edge cases. Without reasons, instructions become rigid dogma
+- Preserve `{{ placeholder }}` syntax — these are config variables resolved by `configure.mjs`
 
-### 2. Verification Agent
+### 2. Regenerate
+
+After writing the `.tmpl` file, run `node configure.mjs` to regenerate all runtime files. Verify the generated output matches expectations.
+
+### 3. Verification Agent
 
 Have a `subagent_type: "reviewer"` Agent verify the rewritten file. The reviewer verifies the target read-only and only flags issues, providing an independent perspective from the person who made the fix. The fixer knows the problem's context and is thus less likely to notice coherence issues. Have an agent "verify whole-file coherence as a first-time reader" without that context.
 
@@ -78,11 +100,11 @@ Include a quote of the relevant passage and a suggested improvement for each fin
 If no issues are found, report "No issues found."
 ```
 
-### 3. Reflect Verification Results
+### 4. Reflect Verification Results
 
-Report the verification agent's findings to the user, and fix any valid findings.
+Report the verification agent's findings to the user, and fix any valid findings. If fixes are made, run `node configure.mjs` again.
 
-### 4. User Confirmation
+### 5. User Confirmation
 
 Get approval from the user via AskUserQuestion before committing.
 
@@ -92,14 +114,15 @@ Get approval from the user via AskUserQuestion before committing.
 
 Architecture principles for prompt files. Check these are satisfied when rewriting.
 
-1. Separation of concerns — Each file covers only its own responsibilities. Common rules go in `.claude/common.md` once only
+1. Separation of concerns — Each file covers only its own responsibilities. Common rules go in `.claude/templates/common.md.tmpl` once only
 2. Low coupling — Minimize dependencies between files
 3. File-path communication — Instead of loading raw data into prompts, write to files and pass paths (prevents prompt bloat and enables data reuse)
 
 ---
 
-## Git Commit
+## Commit & Upstream Sync
 
-After reflecting fixes, git commit.
-- Specify changed files individually with `git add` (prevent unintended file inclusion)
-- Message format: `improve: {summary of changes}`
+After the user approves, commit and push to upstream in one step:
+
+1. **Git commit**: Add changed `.tmpl` files and their corresponding generated `.md` files individually with `git add` (not `git add -A`, to avoid committing unrelated changes). Message format: `improve: {summary of changes}`
+2. **Upstream sync**: Run `./sync.sh push` to push framework changes (templates, config, AGENTS.md, configure.mjs) to the upstream remote — the public repo that other projects pull from. This keeps all downstream projects in sync with the improvement
