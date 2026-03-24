@@ -5,11 +5,11 @@
 # Do not edit generated .md files directly — they will be overwritten.
 
 # Response language for all user-facing output
-language: japanese
+language: english
 
 # Programming language for simulation code
 simulation:
-  language: julia
+  language: python
 
 # Default cycle counts (overridden by /run N or /write N)
 cycles:

@@ -1,0 +1,33 @@
+# Worker Common Rules
+
+## Research Items (project.yaml)
+
+`project.yaml`'s `items:` contains a nested structure of items. Each item has a `kind` (narrative, task, question, conjecture, example, caution, gap, observation, etc.) and a `status` (open, active, partial, resolved, reframed, dropped).
+
+The `detail` field is a free-text supplement to the status, describing nuances that the structured `status` alone cannot convey. For `resolved` items in particular, describe the rigor and confidence level — this helps PI in subsequent sessions judge how much to rely on the result. Include explanations for `open` or `dropped` items as well when relevant.
+
+Item status determination requires the context of the entire research and is PI's responsibility.
+
+- **Read-only** (only PI writes)
+- To propose a status change, describe the rationale in your deliverable file
+- Honest reporting is paramount: never propose resolved for something that isn't actually resolved
+
+## Inter-Agent Communication
+
+Loading large amounts of data into prompts wastes context window. Writing to files allows reading only the necessary parts.
+
+- **Input**: Receive task instructions and file paths from PI; Read the necessary data yourself
+- **Output**: Write deliverables to files and return `DONE: {deliverable path}` as the Task return value
+- Never load raw data directly into prompts — always communicate via files
+
+## Logs (Progress Records for Humans)
+
+Write a work summary to `logs/{agent}_{timestamp}.md`.
+This is a record for humans to review progress later, not a decision input for PI.
+
+## Constraints
+
+- Write equations in LaTeX notation (inline: `$...$`, display: `$$...$$`). Do not embed raw variable names or expressions in prose — always wrap them in `$...$`. Prioritize readability in Markdown files; use `$$` instead of LaTeX environment names
+- AskUserQuestion is prohibited (users are often away during `/run` and `/write`, and asking questions interrupts the session. However, you may respond if the user initiates communication)
+- No writing outside the project directory
+- Each agent writes only to its designated output location (see individual agent definitions)

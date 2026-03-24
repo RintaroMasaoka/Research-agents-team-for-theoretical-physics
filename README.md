@@ -1,10 +1,10 @@
-# Vibe Research — Autonomous Research Paper Generation System
+# Research Agents Team for Theoretical Physics — Autonomous Research Paper Generation System
 
 An autonomous system that generates academic papers in theoretical physics with minimal human intervention, powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 ## Overview
 
-Vibe Research organizes AI agents into a virtual research lab structure: a **PI (Principal Investigator)** coordinates specialized **student agents** (reader, writer, critic, researcher, simulator, etc.), while the **human user** acts as a collaborating researcher who sets direction and reviews progress.
+This system organizes AI agents into a virtual research lab structure: a **PI (Principal Investigator)** coordinates specialized **student agents** (reader, writer, critic, researcher, simulator, etc.), while the **human user** acts as a collaborating researcher who sets direction and reviews progress.
 
 ## Commands
 

@@ -1,0 +1,120 @@
+---
+name: meeting
+description: "Start a meeting session for project progress review and course correction."
+user-invocable: true
+argument-hint: "[theme (optional)]"
+---
+
+# Meeting
+
+Arguments: $ARGUMENTS
+
+---
+
+## Flow
+
+**Principle: Ask questions first, then load data only as needed after responses.** Meetings are real-time dialogue, and response delays interrupt the user's thinking. Use AskUserQuestion for questions (text output questions risk missed responses).
+
+```
+Initialization
+    ▼ Data loading: project.yaml
+    ▼ Context-dependent start
+        ├─ No theme set → Start with theme setting
+        └─ Theme already set → Present progress report and open discussion
+    ▼ Free discussion with user
+    ▼ Reflect decisions as they are made
+```
+
+### Initialization
+
+Execute the following at session start (→ incremental recording principle).
+
+1. Get the current datetime with `Bash("date '+%Y-%m-%dT%H:%M'")`  (use this value for all timestamps in the session)
+2. Update `project.yaml`'s `last_meeting` to the obtained datetime
+3. Create `meetings/YYYY-MM-DD_HHMM.md` using the obtained datetime (header only):
+
+```markdown
+# Meeting YYYY-MM-DD HH:MM
+
+## Discussion Items
+
+## Decisions
+
+## Changes Applied
+```
+
+After initialization, commit with `meeting: init YYYY-MM-DD HH:MM`.
+
+### When No Theme Is Set
+
+Set the research theme and direction.
+
+```
+AskUserQuestion: Ask user to describe the research theme overview in Other
+    ▼ AI presents several approach options → Refine direction (2-3 rounds)
+    ▼ Reflect in project.yaml + plan.md
+```
+
+**Where to reflect:**
+- Set topic, field, created_at, questions in `project.yaml`
+- Create research plan in `research/plan.md`
+- If git is not initialized: `git init && git add -A && git commit -m "init: {topic}"`
+
+**Principle:** The user decides "what" and "why." AI decides "how." AI drafts the wording of questions and confirms with the user.
+
+### When Theme Is Already Set
+
+Review the overall research direction and open discussion.
+
+```
+Data loading: research/notes/index.md + plan.md + latest meeting minutes
+    ▼ If agenda.md exists (agenda accumulated by PI during /run), load → immediately delete (prevent consumed agenda from carrying over to next time)
+    ▼ Present progress report
+    ▼ If loaded agenda items exist, display and discuss them as well
+    ▼ AI presents high-level observations
+    ▼ Free discussion with user
+    ▼ Reflect decisions
+```
+
+**Progress report:**
+```
+Theme: {topic}
+Research Questions:
+  resolved: {N} items — {key findings}
+  partial: {N} items — {key gaps}
+  open: {N} items
+Key achievements since last meeting: [summary]
+```
+
+**Where to reflect:**
+- Structural changes (add/delete/modify story steps, rewrite Thesis) → Edit `research/plan.md` directly + update `project.yaml`. Leave a `> [Meeting YYYY-MM-DD] {reason for change}` marker at changes so PI can understand the context
+- Stance/approach/tone instructions (things hard to write in plan.md) → `research/feedback.md`
+
+**Principle:** Focus on overall direction, not individual question management. Alignment on "what do we want to say with this research."
+
+---
+
+## Deepening the Dialogue
+
+The goal is not AI reporting and ending, but drawing out the user's perspective to co-shape direction. Actively seek the user's judgment in the following situations.
+
+**Turning points in direction:** Get user approval before reflecting plan.md structural changes (step/thesis/question additions/deletions). Present the content, reason, and the option to maintain the status quo.
+
+**Ambiguous statements:** When user statements are ambiguous, state AI's interpretation explicitly and confirm. Do not stop at abstract agreement — specify exactly what changes to plan.md before reflecting.
+
+**Interpreting results:** After the progress report, do not just state AI's assessment. Ask the user about the result's positioning in the storyline. If assessments differ, use that as discussion material and explore implications for plan.md structure and emphasis.
+
+---
+
+## Incremental Recording Principle
+
+Users may leave at any natural stopping point. Post-processing that writes everything at the end risks not being executed. **Record and reflect on the spot, committing as you go.**
+
+| Timing | Action |
+|---|---|
+| Session start | Create meeting minutes file + update `last_meeting` (→ see Initialization section) |
+| When a topic arises | Append to "Discussion Items" in minutes via Edit |
+| When a decision is made | Append to "Decisions" + immediately reflect in relevant files |
+| When a file is changed | Append to "Changes Applied" in minutes + git commit |
+
+**Git commits:** Specify changed files individually with `git add` (prevent unintended file inclusion), and commit in `meeting: {summary of changes}` format. The prefix enables tracking meeting-driven changes in git log.
