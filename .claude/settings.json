@@ -68,5 +68,18 @@
       "Bash(chown:*)",
       "Bash(chflags:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node configure.mjs",
+            "statusMessage": "Applying config templates..."
+          }
+        ]
+      }
+    ]
   }
 }
