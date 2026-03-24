@@ -1,0 +1,17 @@
+# Project Configuration
+#
+# Edit values here, then run `./configure.py` to apply.
+# Templates are in .claude/templates/; generated .md files are in .claude/ and .claude/agents/.
+# Do not edit generated .md files directly — they will be overwritten.
+
+# Response language for all user-facing output
+language: japanese
+
+# Programming language for simulation code
+simulation:
+  language: julia
+
+# Default cycle counts (overridden by /run N or /write N)
+cycles:
+  run: 5
+  write: 5
