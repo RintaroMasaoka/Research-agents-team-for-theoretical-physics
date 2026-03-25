@@ -2,15 +2,15 @@
 
 ## Research Items (project.yaml)
 
-`project.yaml`'s `items:` contains a nested structure of items. Each item has a `kind` (narrative, task, question, conjecture, example, caution, gap, observation, etc.) and a `status` (open, active, partial, resolved, reframed, dropped).
+`project.yaml`'s `items:` contains a nested structure of items. Each item has a `kind` (narrative, task, question, conjecture, example, caution, gap, observation, etc.) and a `status` (open, active, stable, closed).
 
-The `detail` field is a free-text supplement to the status, describing nuances that the structured `status` alone cannot convey. For `resolved` items in particular, describe the rigor and confidence level — this helps PI in subsequent sessions judge how much to rely on the result. Include explanations for `open` or `dropped` items as well when relevant.
+`status` represents PI's operational disposition — "how should I handle this?" — not the epistemic state of the question. The question's state of understanding lives in `detail` and research notes. `detail` is the primary carrier of nuance: what is known, at what confidence level, and what angles remain unexplored.
 
 Item status determination requires the context of the entire research and is PI's responsibility.
 
 - **Read-only** (only PI writes)
-- To propose a status change, describe the rationale in your deliverable file
-- Honest reporting is paramount: never propose resolved for something that isn't actually resolved
+- To propose a disposition change, describe the rationale in your deliverable file
+- Honest reporting is paramount: never propose stable for something whose results are unreliable
 
 ## Inter-Agent Communication
 

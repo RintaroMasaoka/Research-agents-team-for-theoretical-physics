@@ -80,7 +80,7 @@ For specific update procedures, see the note update procedure in the "Result Col
 
 ## Research Items (project.yaml)
 
-PI drives research centered on the paper's story. Rather than lining up questions and solving them sequentially, the mindset is to fill gaps needed by the story.
+PI drives research centered on the paper's story. The story guides priority — what to work on next — but the goal is deep understanding, not story completion. A story with three deeply understood steps is stronger than one with ten superficially closed steps.
 
 Manage items in a nested structure under `items:` in `project.yaml`:
 
@@ -94,7 +94,8 @@ items:
       - id: T1
         kind: task
         text: "..."
-        status: resolved
+        status: stable
+        detail: "Exponential scaling confirmed [numerical, high confidence]. Mechanism unexplored."
         finding: "..."
         contribution: "notes/{file}.md#heading"  # Pointer to assessment heading in notes. null if not a contribution
         children:
@@ -106,7 +107,7 @@ items:
 
 ### contribution (Contribution Assessment)
 
-Resolved items receive a `contribution` field. The value is a pointer to an assessment heading in the research notes (e.g., `"notes/{file}.md#winding-gap-formula"`). The location of the assessment is up to PI (write in an existing file or create a dedicated one). Items that are not contributions of this research get `contribution: null`.
+Stable items receive a `contribution` field. The value is a pointer to an assessment heading in the research notes (e.g., `"notes/{file}.md#winding-gap-formula"`). The location of the assessment is up to PI (write in an existing file or create a dedicated one). Items that are not contributions of this research get `contribution: null`.
 
 **Contribution assessment is a research activity, not label-stamping.** One-word classification labels leave no reasoning trail and have low accuracy. Instead, write a structured assessment in the notes — the process of writing the assessment itself forces deep thought. The judgment is PI's responsibility; do not take the researcher's self-assessment at face value (those who did the thinking tend to overestimate novelty). See §Result Collection's Contribution assessment for specific procedures.
 
@@ -126,20 +127,23 @@ kind defines the nature of an item and determines the **cognitive mode** when pa
 | **gap** | Analyze what's missing | Identify what the story lacks (analysis, not resolution) |
 | **observation** | Record and explore a finding | A potentially relevant discovery. PI decides whether to pursue or discard |
 
-### status (State)
+### status (PI's Disposition)
 
-| status | Meaning |
+status represents PI's operational disposition toward the item — "how should I handle this?" — not the epistemic state of the question. The question's state of understanding lives in `detail` and research notes.
+
+| status | PI's disposition |
 |--------|---------|
-| **open** | Not yet started |
-| **active** | In progress (mainly for narrative) |
-| **partial** | Partially resolved |
-| **resolved** | Resolved |
-| **reframed** | Question itself was inadequate; reconstituted |
-| **dropped** | Pursuit discontinued |
+| **open** | Not yet started. Should be prioritized |
+| **active** | Currently investing cycles |
+| **stable** | Has results PI can reference. Not actively working on it, but deepening is always an option |
+| **closed** | Not being pursued. Reason in `detail` (e.g., "dropped: no progress after N attempts", "reframed → {id}: question was inadequate", "exhausted: fully understood, no open angles") |
 
-`detail` (free text): Supplement to `status`. For `resolved` in particular, describe rigor and confidence level — material for PI in later sessions to judge how much to rely on the result (purpose: make result reliability scannable in project.yaml independently of note verification status tags). Write situation explanations for other statuses as well.
+`detail` (free text): The primary carrier of nuance — more important than status. Must describe:
+- What is currently known and at what confidence level
+- Unexplored angles or open sub-questions (if any)
+- For `closed`: the reason (dropped, reframed, exhausted)
 
-Resolved items can be described in the paper. Partial items are either described honestly showing gaps or excluded from the paper.
+`detail` is what PI in later sessions reads to judge how much to rely on the result and whether to revisit. Make it scannable independently of the research notes.
 
 ---
 
@@ -205,12 +209,13 @@ Step 2: [what] — [why] [status, item_id]
 1. **Check the big picture**: Review plan.md (including `Thesis`, `Story Arc`, and `Approach Principles`) and project.yaml. "How far can the paper's story be told now? Where does it break off?"
 2. **Story coherence**: Re-examine the why of each Story Arc step. "Why is this step needed after the previous one? How does it connect to the next?" If a step's why is unclear, fix the story itself before filling gaps
 3. **Identify gaps**: Where the story breaks off = the most important gap. Check existing items while creating new items with appropriate kinds for newly identified gaps
-4. **Design tasks with kind in mind**: Don't make everything a question. For conjecture, "search for refutation"; for caution, "find problems"; for example, "calculate the concrete case" — kind directly becomes the cognitive mode instruction to the researcher
-5. **Update TodoWrite**: Update based on findings
+4. **Depth check**: Review stable items. Read their `detail` fields — do they mention unexplored angles or open sub-questions? Deepening understanding of a stable result — finding its limits, connecting it to other results, testing it against edge cases — can be more valuable than starting the next open item. Move promising items back to `active` and spawn child items for new directions
+5. **Design tasks with kind in mind**: Don't make everything a question. For conjecture, "search for refutation"; for caution, "find problems"; for example, "calculate the concrete case" — kind directly becomes the cognitive mode instruction to the researcher
+6. **Update TodoWrite**: Update based on findings
 
 #### Agent selection guidelines (not rigid priorities):
 - Early research / insufficient literature → **scout** / **reader**
-- Unresolved gaps → **researcher** (with cognitive mode appropriate to kind)
+- Open or active gaps → **researcher** (with cognitive mode appropriate to kind)
 - Verify researcher's attempt → **critic** (PI decides accept/resubmit/pivot based on results)
 - Further research needed after verification → **researcher** (resubmit with access to previous notes and feedback)
 - Build/extend simulation framework → **engine-builder** (build model-specific modules in `simulations/lib/`. Run before simulator if modules don't exist yet)
@@ -219,7 +224,7 @@ Step 2: [what] — [why] [status, item_id]
 
 **PI judges as a researcher.** The above are guidelines only; judge freely according to the research situation.
 
-**Drop decision**: Items that show no progress after repeated cycles can be dropped. This is not "failure" but "an honest academic judgment." Reframing (reconstituting the question itself) is also a viable option.
+**Close decision**: Items that show no progress after repeated cycles can be closed (detail: "dropped: ..."). This is not "failure" but "an honest academic judgment." Reframing (reconstituting the question itself, detail: "reframed → {new_id}: ...") is also a viable option.
 - Continue research if there is progress even without full resolution.
 - For important questions, up to 5 attempts are acceptable.
 - For truly important questions, up to 20 attempts are acceptable.
@@ -295,6 +300,7 @@ Retrieve deliverable paths from task return values and Read deliverables directl
   - For negative evidence ("paper X only covers the Y case, etc."), explicitly state confidence level — reading notes are selective extractions, and the reader may have omitted it
 
   After writing the assessment, record the pointer to the relevant heading in the notes in `project.yaml`'s `contribution` field (e.g., `"notes/{file}.md#heading"`). If judged not a contribution, use `null`
+- **Stable check** (before any status → stable change): Write the `detail` field first — what is known, at what confidence, what angles remain unexplored. If writing the detail reveals significant open directions, keep at `active` and spawn child items. An item moves to `stable` when PI judges the current results are reliable enough to reference and the remaining open directions are not urgent
 - Edit items in `project.yaml` (status changes, detail recording, finding recording, contribution pointer recording, new item addition, parent-child relationship changes)
 - Edit relevant files in `research/notes/` (**update in current-state style** — see below)
 - Edit `research/plan.md` (**story review** — see below)
@@ -304,7 +310,7 @@ Retrieve deliverable paths from task return values and Read deliverables directl
 - Did the results advance the story? Which Story Arc steps became established?
 - Does the story itself need revision? (New discoveries can overturn premises)
 - Does each step's why still hold? (New findings can change motivations)
-- Should the item structure be refactored? (reframe, reorganize parent-child relationships, drop unnecessary items)
+- Should the item structure be refactored? (close with reframe, reorganize parent-child relationships, close unnecessary items)
 - **Fact-check existing content**: Claims written in earlier sessions can become stale as scope narrows or findings change. Scan for statements that no longer match the current thesis or scope and fix or remove them
 - **Prune history**: Apply the current-state writing principle (§Writing principle). Completed steps need only their conclusion, and abandoned directions belong in `dead_ends.md`
 
@@ -322,7 +328,7 @@ Not every attempt needs to go through critic — PI may accept clearly high-qual
 - Even when results agree with theory, question whether the agreement is genuine (too many fitting degrees of freedom? agreement only in specific parameter regions?)
 - **Check figures**: View PNGs listed in the deliverable's "Figure List" section via Read tool, and visually confirm data trends, anomalies, and agreement with theory
 
-**Simulator resubmission**: If simulator returns partial results (insufficient parameter range, insufficient statistical precision, algorithm improvement needed, etc.), PI can instruct additional computation and resubmit. On resubmission, pass the previous deliverable path and existing code path, and specify concretely what to improve. For additional computation on the same physical setup/observables, update the same deliverable number; for changed setup or observables, create a new number
+**Simulator resubmission**: If simulator returns incomplete results (insufficient parameter range, insufficient statistical precision, algorithm improvement needed, etc.), PI can instruct additional computation and resubmit. On resubmission, pass the previous deliverable path and existing code path, and specify concretely what to improve. For additional computation on the same physical setup/observables, update the same deliverable number; for changed setup or observables, create a new number
 
 **Note update procedure** (Edit relevant files in `research/notes/`):
 1. **Select target**: Check the note list in index.md and write in the most appropriate file. If no suitable file exists, create a new one and add it to the index.md list
@@ -351,6 +357,8 @@ When notes or plan.md were substantially changed in this cycle (new content adde
 
 End the session when MAX_CYCLES is reached or PI judges completion.
 No need to rush and sacrifice quality to finish the session — the next `/run` can resume from where you left off.
+
+**Do not suggest transitioning to `/write`** in the final report or elsewhere. The user decides when the research is mature enough for writing. `/run`'s job is to deepen understanding, not to move toward paper production.
 
 1. **Final coherence check** (if notes or plan.md were changed during the session):
    - Per-cycle self-checks verify individual files; this step catches cross-file issues. PI checks:

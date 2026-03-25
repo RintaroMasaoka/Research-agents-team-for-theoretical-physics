@@ -22,13 +22,13 @@ Draft a single specified section as an academic paper.
 ## Procedure
 
 1. Writing format according to item kind and status:
-   - **task / conjecture** (resolved) → Write as theorem, proposition, or proof (in discipline-appropriate format)
-   - **example** (resolved) → Write as a concrete example. Include calculation steps
-   - **observation** (resolved) → Write as a remark or observation
-   - **caution** (resolved) → Write as caveats or constraints (clearly highlight points readers might overlook)
-   - **question** (resolved) → Write as a conclusion. Present the question and provide the answer
-   - **partial** → Write honestly showing gaps. Clearly state what is known and what remains unresolved
-   - **Writing unresolved items as established results is prohibited**
+   - **task / conjecture** (stable, high confidence) → Write as theorem, proposition, or proof (in discipline-appropriate format)
+   - **example** (stable) → Write as a concrete example. Include calculation steps
+   - **observation** (stable) → Write as a remark or observation
+   - **caution** (stable) → Write as caveats or constraints (clearly highlight points readers might overlook)
+   - **question** (stable) → Write as a conclusion. Present the question and provide the answer
+   - **stable with low confidence or unexplored angles** → Write honestly showing gaps. Clearly state what is known and what remains
+   - **Writing active or open items as established results is prohibited**. Check the `detail` field for confidence level
 2. Read evidence files (`research/work/attempt_*.md`, `research/work/reading_*.md`) directly
 3. Also Read original sources (`research/papers/` `.tex` files) as needed
 4. Write following the conventions in `paper/conventions.md`
