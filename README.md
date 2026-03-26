@@ -90,10 +90,11 @@ configure.mjs             # Renders generated prompt files from config + templat
 
 .claude/
 ├── config/config.yaml    # Main editable config
-├── templates/            # Prompt templates
 ├── agents/*.md           # Generated agent instructions
 ├── skills/*/SKILL.md     # Generated skills
 └── settings.json         # Claude Code settings, including SessionStart hook
+
+templates/                # Prompt templates (source of truth for generated .md files)
 ```
 
 ## Runtime Artifacts
@@ -124,7 +125,7 @@ Current supported top-level values include:
 | `cycles.run` | Default cycle count for `/run` |
 | `cycles.write` | Default cycle count for `/write` |
 
-Prompt content lives in `.claude/templates/`, and generated files are rebuilt from those templates.
+Prompt content lives in `templates/`, and generated files are rebuilt from those templates.
 
 Manual commands:
 

@@ -9,7 +9,7 @@
  *
  * Source of truth:
  *   Config values:  .claude/config/config.yaml
- *   Prompt content: .claude/templates/**\/*.tmpl
+ *   Prompt content: templates/**\/*.tmpl
  * Generated (do not edit directly — overwritten on each run):
  *   .claude/**\/*.md  (mirrors templates/ structure, .tmpl extension stripped)
  */
@@ -20,7 +20,7 @@ import { fileURLToPath } from "url";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = join(ROOT, ".claude", "config", "config.yaml");
-const TMPL_DIR = join(ROOT, ".claude", "templates");
+const TMPL_DIR = join(ROOT, "templates");
 const OUT_DIR = join(ROOT, ".claude");
 
 // ── YAML parsing ──────────────────────────────────────────────────────
