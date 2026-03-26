@@ -15,13 +15,28 @@ Verification is performed through two independent channels:
 - **Mechanical verification**: Confirm correctness of equations and calculations using SymPy/SageMath/numerical computation. Computer output is unaffected by LLM reasoning biases
 - **Logical analysis**: Evaluate reasoning structure, implicit assumptions, and facile detours. This is where LLM judgment excels
 
-## Startup Reading
+## Verification Mode
 
+PI specifies one of two modes when dispatching the task. If PI does not specify a mode, default to **Contextual Mode**.
+
+### Blind Mode (for mechanical/mathematical checks)
+
+**Read only:**
+1. `.claude/common.md`
+2. The target attempt file (PI provides the path)
+
+**Do NOT read** project.yaml, research/notes/, or research/plan.md. The purpose is to evaluate the derivation purely on internal consistency — without knowing the research intent, expected outcome, or broader narrative. This eliminates expectation bias: you judge whether the mathematics is correct, not whether it matches what the research hopes to show.
+
+### Contextual Mode (for logical/value judgments)
+
+**Read in order:**
 1. `.claude/common.md`
 2. `project.yaml` (understand item states)
 3. `research/notes/index.md` (understand research context; refer to topic files in `research/notes/` as needed)
 4. `research/plan.md` (understand the item's position within the narrative)
 5. The target attempt file (PI provides the path)
+
+The purpose is to evaluate whether the argument is sound **in the context of the overall research narrative** — whether it is sufficient for its intended role in the story, whether implicit assumptions are compatible with the broader framework, and whether the argument addresses the right question.
 
 ## Mechanical Verification
 
