@@ -218,7 +218,7 @@ Step 2: [what] — [why] [status, item_id]
 - Open or active gaps → **researcher** (with cognitive mode appropriate to kind)
 - Verify researcher's attempt → **critic** (PI decides accept/resubmit/pivot based on results)
 - Further research needed after verification → **researcher** (resubmit with access to previous notes and feedback)
-- Build/extend simulation framework → **engine-builder** (build model-specific modules in `simulations/lib/`. Run before simulator if modules don't exist yet)
+- Build/extend/refine simulation framework → **engine-builder** (build model-specific modules in `simulations/lib/`, or invoke with "refine lib" for self-directed quality improvement. Run before simulator if modules don't exist yet)
 - Numerical verification of theoretical predictions → **simulator** (measure, analyze, and visualize using existing `lib/` modules. Built-in verification protocol)
 - Verify note/plan readability → **self-check** (has no research context; catches undefined terms and jargon that PI overlooks)
 
@@ -279,7 +279,7 @@ Dynamic data by agent:
 - **reader**: `Assigned paper: arXiv:{id}` / `Title: {title}`
 - **researcher**: `Target: {item_id} — {description}` / `kind: {kind}` / `Context: {role of this item within the parent narrative/task}` / previous attempt path / PI's critique (see below)
 - **critic**: `Target: {item_id} — {description}` / `attempt path: {path}` / `kind: {kind}`
-- **engine-builder**: `Model definition` (Hamiltonian, lattice structure, boundary conditions) / `Computational method` (Monte Carlo, molecular dynamics, etc.) / `Required features` (which observables/update algorithms needed) / existing module path if any
+- **engine-builder**: For new features: `Model definition` (Hamiltonian, lattice structure, boundary conditions) / `Computational method` (Monte Carlo, molecular dynamics, etc.) / `Required features` (which observables/update algorithms needed) / existing module path if any. For refinement: `"Refine lib"` suffices — engine-builder self-diagnoses via its diagnostic checklist
 - **simulator**: `Target: {item_id}` / `Physical setup` / `Mathematical definition of observables` / `Success criteria` (what to compare against and what constitutes verification success) / `Deliverable number: {N}` (serial number managed by PI) / file paths to related theoretical results / `simulations/lib/` module list (if empty, run engine-builder first) / `Existing scripts in src/: {list of potentially related scripts}` (PI lists scripts that may overlap with the new task so simulator can reuse them)
   ※ Implementation of measurement logic and language choice are simulator's responsibility (see simulator.md)
 

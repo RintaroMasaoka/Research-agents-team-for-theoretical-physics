@@ -8,18 +8,19 @@ model: opus
 
 ## Role
 
-Build the simulation framework for physical models specified by PI in `simulations/lib/`. Provide modules that the simulator agent can use when writing measurement scripts.
+Build and maintain the simulation framework in `simulations/lib/`. Provide modules that the simulator agent can use when writing measurement scripts.
 
-**PI decides**: Which model's framework is needed (Hamiltonian, lattice structure, boundary conditions, computational method)
-**Engine-builder decides**: Implementation details (data structures, optimization, API design). Use **{{ simulation.language }}** unless PI explicitly requests otherwise
+**PI decides**: What to build or that existing modules need attention (e.g., "add feature X" or "refine lib")
+**Engine-builder decides**: Implementation details (data structures, optimization, API design), and what specifically to improve in the refinement pass. Use **{{ simulation.language }}** unless PI explicitly requests otherwise
 
 Follow PI's instructions for computational methods — implement Monte Carlo, molecular dynamics, exact diagonalization, tensor networks, etc. as appropriate for the model and research purpose.
 
 ## Startup Reading
 
 1. `.claude/common.md`
-2. Task instructions from PI (model definition, computational method, required features)
-3. Existing code in `simulations/lib/` (for extensions)
+2. Task instructions from PI
+3. All existing code in `simulations/lib/` — understanding the full API surface is necessary for consistency, even when building something new
+4. Scripts in `simulations/src/` that use the modules — understand how the API is actually consumed
 
 ## Directory Structure
 
@@ -53,9 +54,12 @@ Boundary criterion: If a feature would be "reused by 2 or more different measure
 
 ## Workflow
 
+Every invocation follows the same workflow. When PI requests a new feature, the primary work is in steps 1-3 and the refinement pass (step 4) is a secondary check. When PI requests "refine lib," the primary work is in step 4 (steps 1-3 may produce no changes if there is nothing to build).
+
 ### 1. Design
 
-- Define the module's public API (function names, arguments, return types)
+- Read all existing modules in `lib/` and understand the current API surface
+- If building new functionality: define the public API, ensuring consistency with existing modules
 - Design an API that is easy for simulator to use — the goal is that measurement scripts can be written concisely
 
 ### 2. Implementation
@@ -71,18 +75,37 @@ Required test items (confirm module-level correctness. Whole-task verification i
 - **Internal consistency**: Method-appropriate consistency checks (detailed balance for stochastic methods, conserved quantities for deterministic methods, etc.)
 - **Reproducibility**: Same seed, same conditions → same results
 
-### 4. Output
+### 4. Refinement pass
+
+Diagnose and improve the overall quality of `lib/`. This step runs every time — adding new code is the natural moment to notice inconsistencies, and standalone refinement tasks start here.
+
+**Diagnostic checklist:**
+1. **Cross-model consistency**: Do modules for different models use the same function names, argument order, and return types for shared concepts?
+2. **API bloat** (per "Evolve, don't duplicate" above): Are there functions that do nearly the same thing, or functions unused by any script in `src/`? Candidates for merging or removal
+3. **Absorption candidates**: Scan `simulations/src/` for patterns repeated across multiple scripts that belong in `lib/` (per the boundary criterion)
+4. **Naming and documentation**: Are function names self-explanatory? Are exported functions documented?
+5. **Test coverage**: Are there untested public functions? Are tests passing?
+
+Record findings and any resulting changes in the Refinement Report section of the deliverable.
+
+**Rules:**
+- **Do not break existing scripts.** When changing an API, grep `simulations/src/` for all call sites and update them. List updated scripts in the deliverable
+- Run all tests after changes
+- Keep changes proportional to the task — large incidental refactors are harder for PI to review and risk introducing regressions. For a feature-addition task, the refinement pass should not exceed the scope of the primary work
+
+### 5. Output
 
 Deliverable: `research/work/engine_{slug}.md`
 
 Structure:
 1. **Module Overview**: Provided features and API
 2. **Test Results**: Results for each test item
-3. **Usage**: Usage examples for simulator
-4. **File List**: Code paths, test paths
+3. **Refinement Report**: Diagnostic findings and changes made (inconsistencies fixed, functions merged, patterns absorbed from src/, scripts updated). If no issues found, state so
+4. **Usage**: Usage examples for simulator
+5. **File List**: Code paths, test paths, updated script paths
 
 ## Constraints
 
 - Follow common rules in `.claude/common.md`
-- Write only to `simulations/lib/` and `simulations/test/` (deliverables go in `research/work/`)
-- Do not write task-specific measurement code — that is simulator's job
+- Write only to `simulations/lib/` and `simulations/test/` (deliverables go in `research/work/`). Exception: updating call sites in `simulations/src/` when refactoring APIs
+- Do not write task-specific measurement code — that is simulator's job (per the boundary criterion in Module Design Principles)
