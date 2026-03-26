@@ -29,7 +29,7 @@ simulations/
   lib/                    # Simulation framework modules (managed by engine-builder. Read-only)
   src/{slug}.{ext}        # Measurement scripts (managed by simulator)
   src/{slug}_plot.py      # Plot scripts (managed by simulator)
-  results/{slug}/         # Per-task output data + figures (PNG)
+  results/{slug}/         # Per-task output data + figures (PNG) + REPORT.md
   test/                   # Module tests (managed by engine-builder. Read-only)
 ```
 
@@ -40,7 +40,7 @@ simulations/
 Before writing code, clarify the following:
 - **What to compute**: Mathematical definition of observables (from PI's instructions and theoretical results. If ambiguous, choose the most natural interpretation and record it in the deliverable)
 - **What modules to use**: Check if existing APIs suffice. If not, record in deliverable
-- **How to confirm correctness**: Verification plan (see §3 below)
+- **How to confirm correctness**: Verification plan (see verification protocol in §2)
 
 ### 2. Implementation and Verification Iteration
 
@@ -91,6 +91,25 @@ Output analysis results as figures that humans can grasp intuitively. Visualizat
 - Comparison plot with theoretical predictions (the figure directly tied to success criteria)
 - Verification result figures (visually showing agreement with known limits)
 
+### 6. Results README
+
+Write `results/{slug}/REPORT.md` — a self-contained explanation of this simulation for the human researcher (the user). The user often reviews results by browsing the `results/` directory, so this file is their primary entry point. Write in **{{ language }}**.
+
+**Content and structure** (section names are examples — adapt to {{ language }}):
+
+1. **Overview**: What was computed and why (physical setup, observables, motivation). Aim for a level that someone returning to this data weeks later can understand without re-reading the deliverable
+2. **Figures**: For each PNG in the directory, embed it with `![caption](filename.png)` and write:
+   - What the figure shows (axes, data series, overlays)
+   - How to read it (what patterns or trends to look for)
+   - Key takeaway (what conclusion this figure supports)
+3. **Data reliability**: Summarize the verification results from §2 in plain language — what checks were done, what passed, and any caveats or limitations. The goal is for the user to judge "can I trust these numbers?" (The detailed verification data lives in the deliverable; this is a human-readable digest)
+4. **Reproduction**: Exact commands to reproduce the data and figures (with seeds and parameters)
+
+**Writing guidelines**:
+- The audience is the user, not PI. Avoid internal jargon (item IDs, deliverable numbers, module API names)
+- Figures are the backbone — every PNG should appear in the README with explanation. A figure without explanation is not useful; an explanation without a figure is hard to follow
+- Keep it concise but complete. One paragraph per figure is usually enough
+
 ## Output
 
 **Deliverable**: `research/work/simulation_{N}_{slug}.md` (`{N}` is the serial number specified by PI in the prompt. If not specified, use max existing `simulation_*.md` number + 1, noting this at the top of the deliverable)
@@ -104,7 +123,7 @@ Structure:
 6. **Figure List**: Path, description, and conclusions for each figure (list paths accurately for PI to view with Read tool)
 7. **Conclusions**: Assessment against PI's success criteria. Agreement/disagreement with theoretical predictions, confidence level, limitations
 8. **Module Requests** (if applicable): Missing functionality
-9. **File List**: Paths of all generated files (code, data, figures)
+9. **File List**: Paths of all generated files (code, data, figures, results README)
 
 ## Constraints
 
