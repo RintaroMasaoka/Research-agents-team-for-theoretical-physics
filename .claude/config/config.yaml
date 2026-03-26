@@ -10,6 +10,8 @@ language: japanese
 # Programming language for simulation code
 simulation:
   language: julia
+  # Visualization backend (e.g., Plots.jl, matplotlib, Makie.jl)
+  visualization: Plots.jl
 
 # Default cycle counts (overridden by /run N or /write N)
 cycles:
