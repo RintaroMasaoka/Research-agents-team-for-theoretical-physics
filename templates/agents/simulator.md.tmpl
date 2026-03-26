@@ -28,10 +28,18 @@ If the module lacks necessary functionality, record this in the deliverable and 
 simulations/
   lib/                    # Simulation framework modules (managed by engine-builder. Read-only)
   src/{slug}.{ext}        # Measurement scripts (managed by simulator)
-  src/{slug}_plot.py      # Plot scripts (managed by simulator)
-  results/{slug}/         # Per-task output data + figures (PNG)
+  src/{slug}_plot.{ext}   # Plot scripts (managed by simulator)
+  results/{slug}/         # Per-task output directory (see Results Directory Management)
   test/                   # Module tests (managed by engine-builder. Read-only)
 ```
+
+### Results Directory Management
+
+Each `results/{slug}/` directory must be self-explanatory to someone encountering it months later.
+
+- **`README.md`**: Every results directory contains a README listing all files with one-line descriptions, the physical setup that produced the data, and the command(s) to reproduce the results
+- **File naming**: Use descriptive names encoding key parameters (e.g., `energy_L16_T0.5.csv` rather than `data1.csv`). The content should be identifiable from the filename alone
+- **Data format**: Use CSV with a header row for tabular data (widely readable, version-control friendly). Include column descriptions in the README. For very large datasets, note the format choice and rationale in the README
 
 ## Workflow
 
@@ -65,7 +73,7 @@ Numerical computation reliability is guaranteed only through verification. First
 Execute production-parameter computations with verified code.
 - Record execution commands in deliverable (reproducibility)
 - Record execution time
-- Save raw data to `simulations/results/{slug}/`
+- Save raw data to the task output directory (`simulations/results/{slug}/`)
 
 Bash tool timeout is 10 minutes. For computations exceeding this, split the parameter range into multiple runs or write intermediate results to files for subsequent runs to read.
 
@@ -79,12 +87,13 @@ Bash tool timeout is 10 minutes. For computations exceeding this, split the para
 
 Output analysis results as figures that humans can grasp intuitively. Visualization is also a means of visually confirming result reliability — data anomalies and systematic biases are easier to spot in plots than in numerical tables.
 
-**Plot scripts**: Implement as `src/{slug}_plot.py` in Python/matplotlib (unified regardless of measurement script language). Read data from `results/{slug}/` and output PNGs to the same directory (PNGs can be viewed directly with the Read tool, allowing PI to check figures via agents).
+**Plot scripts**: Implement as `src/{slug}_plot.{ext}` using **{{ simulation.visualization }}** (follows the project's configured visualization backend). Read data from `simulations/results/{slug}/` and output PNGs to the same directory. Use PNG format (widely supported raster format that agents and humans can inspect directly).
 
 **Figure design guidelines**:
 - One message per figure. The axis labels and title should make clear what the figure shows
 - When theoretical predictions exist, overlay them (solid line = theory, markers = simulation)
-- Always display error bars
+- Display error bars for stochastic results (they communicate statistical reliability and are essential for meaningful comparison with theory). For deterministic results, indicate numerical precision or convergence tolerances where applicable
+- Name figures to reflect their content (e.g., `magnetization_vs_temperature.png` rather than `fig1.png`)
 
 **Minimum required figures**:
 - Parameter dependence of main observables
@@ -95,20 +104,24 @@ Output analysis results as figures that humans can grasp intuitively. Visualizat
 
 **Deliverable**: `research/work/simulation_{N}_{slug}.md` (`{N}` is the serial number specified by PI in the prompt. If not specified, use max existing `simulation_*.md` number + 1, noting this at the top of the deliverable)
 
-Structure:
-1. **Task**: What was computed (setup, observable definitions)
-2. **Modules Used**: Which module APIs were used
-3. **Measurement Logic**: Script overview (implementation of parts not in modules)
-4. **Verification Results**: Results for each verification item
-5. **Production Results**: Data, fitting, comparison with theory
-6. **Figure List**: Path, description, and conclusions for each figure (list paths accurately for PI to view with Read tool)
-7. **Conclusions**: Assessment against PI's success criteria. Agreement/disagreement with theoretical predictions, confidence level, limitations
-8. **Module Requests** (if applicable): Missing functionality
-9. **File List**: Paths of all generated files (code, data, figures)
+Deliverables often serve as the sole record of a simulation campaign, so they must be readable independently. Embed figures inline so the document reads as a complete narrative, not a collection of file references.
+
+**Writing principles**:
+- **Self-contained**: Define physical setup, observables, and methods without relying on external context. A reader should not need to consult other files to follow the argument
+- **Jargon-aware**: When using domain-specific terms, briefly define or contextualize them at first use
+- **Figures inline**: Embed all figures at the point where they are discussed using `![description](relative/path/to/figure.png)`. The caption (alt text) should state what the figure shows and the key takeaway
+- **Narrative flow**: Present results as a coherent story (setup → method → verification → results → interpretation), not as disconnected sections
+
+**Structure**:
+1. **Setup**: Physical system, observables, and their mathematical definitions. Written so a physicist outside the subfield can follow
+2. **Method**: Which modules were used, what the measurement script does, and key implementation choices
+3. **Verification**: Results for each verification item, with inline figures showing agreement with known limits
+4. **Results**: Production data, analysis (fitting, scaling, etc.), and comparison with theoretical predictions — with inline figures at each discussion point
+5. **Conclusions**: Assessment against PI's success criteria. Agreement/disagreement with theoretical predictions, confidence level, limitations
+6. **Appendix**: Module requests (if any), execution commands (for reproducibility), and complete file list
 
 ## Constraints
 
 - Follow common rules in `.claude/common.md`
 - Do not edit `simulations/lib/` (engine-builder's responsibility)
 - Do not paste large amounts of raw data into the deliverable (.md) — reference by file path
-- Do not add dependencies beyond matplotlib and numpy to plot scripts
