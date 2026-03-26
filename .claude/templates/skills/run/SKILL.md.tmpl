@@ -53,6 +53,7 @@ simulations/               # Numerical computations
   lib/                     # Simulation framework modules (managed by engine-builder)
   src/                     # Measurement scripts (managed by simulator)
   results/{slug}/          # Per-task output data + figures
+  results/archive/         # Retired results (superseded or unreliable data)
   test/                    # Module tests (managed by engine-builder)
   src/archive/             # Retired scripts (superseded versions, abandoned experiments)
 logs/                      # Progress records for humans + session handoff
@@ -361,11 +362,11 @@ No need to rush and sacrifice quality to finish the session — the next `/run` 
 **Do not suggest transitioning to `/write`** in the final report or elsewhere. The user decides when the research is mature enough for writing. `/run`'s job is to deepen understanding, not to move toward paper production.
 
 1. **Simulation housekeeping** (if simulator ran during the session):
-   Batch cleanup at session end is more efficient than per-cycle cleanup because multiple simulator tasks may touch overlapping scripts within a session.
+   Results archiving is the simulator's responsibility at task time (§1 Design in simulator.md). This step covers `src/` script cleanup, batched at session end because multiple simulator tasks may touch overlapping scripts within a session.
    - List all scripts in `simulations/src/` and check for:
      - **Superseded scripts**: A newer version exists (e.g., `foo.jl` superseded by `foo_v2.jl`). Move the old version to `src/archive/` and rename the new version to drop the suffix, updating any references
      - **Dead scripts**: Scripts from abandoned experiments that no longer serve any active or stable item. Move to `src/archive/`
-   - When in doubt, keep the script — archiving can happen in a later session. `src/archive/` preserves files for reference (searchable via Grep) while keeping the active workspace clean. Record moves in `logs/last_session.md`
+   - When in doubt, keep the script — archiving can happen in a later session. Never delete; always move to the archive directory. Archive directories preserve files for reference (searchable via Grep, recoverable if needed) while keeping the active workspace clean. Record moves in `logs/last_session.md`
 2. **Final coherence check** (if notes or plan.md were changed during the session):
    - Per-cycle self-checks verify individual files; this step catches cross-file issues. PI checks:
      - Whether referenced attempt file state descriptions are current

@@ -30,6 +30,7 @@ simulations/
   src/{slug}.{ext}        # Measurement scripts (managed by simulator)
   src/{slug}_plot.py      # Plot scripts (managed by simulator)
   results/{slug}/         # Per-task output data + figures (PNG) + REPORT.md
+  results/archive/        # Retired results (superseded or unreliable data)
   test/                   # Module tests (managed by engine-builder. Read-only)
 ```
 
@@ -40,6 +41,7 @@ simulations/
 Before writing code, clarify the following:
 - **What modules to use**: Check `simulations/lib/` APIs. If insufficient, record in deliverable
 - **Check existing scripts**: Search `simulations/src/` for scripts measuring the same or similar observables. Extend an existing script rather than creating a new file when possible — accumulating parallel scripts makes the codebase harder to navigate. Record the decision in the deliverable
+- **Check existing results**: Search `simulations/results/` for directories containing data for the same observables/parameters. If this task supersedes old results (re-measurement after bug fix, improved parameters, etc.), move the old directory to `results/archive/` before producing new data. Never delete old results — always archive (archived data remains searchable and recoverable). Record what was archived and why in the deliverable
 - **What to compute**: Mathematical definition of observables (from PI's instructions and theoretical results. If ambiguous, choose the most natural interpretation and record it in the deliverable)
 - **How to confirm correctness**: Verification plan (see verification protocol in §2)
 
