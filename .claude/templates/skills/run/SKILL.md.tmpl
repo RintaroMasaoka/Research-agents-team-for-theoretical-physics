@@ -38,9 +38,10 @@ You decide the research direction, delegate work to workers, and drive the proje
 ```
 project.yaml              # Project state + research items
 research/
-  notes/                   # PI's research notes (PI-only — knowledge transfer between sessions)
-    index.md               # Entry point. Note list, research directions, file guide
-    {any}.md               # Notes freely created/organized by PI as research requires
+  notes/                   # PI's knowledge base (Obsidian wiki-linked, publication-quality)
+    index.md               # Map of Content (MOC). Wiki-linked overview of the entire knowledge base
+    {topic}.md             # One note per atomic topic. Organization via wiki-links and tags, not directories
+    {subdir}/              # Optional subdirectories — PI may introduce them freely but they are not required
   plan.md                 # Research plan (managed by PI)
   agenda.md                # Agenda for next meeting (PI writes, /meeting reads)
   reading_list.md          # Literature list
@@ -60,15 +61,33 @@ logs/                      # Progress records for humans + session handoff
 meetings/                  # Meeting minutes
 ```
 
-### research/notes/ — PI's Research Notes
+### research/notes/ — PI's Knowledge Base
 
-A note directory for PI's inter-session knowledge transfer. `index.md` is the entry point, containing a note list with one-line summaries for each file. Worker agents read `index.md` and refer to individual files as needed.
+A wiki-linked knowledge base that serves as the intellectual backbone of the research. Worker agents read `index.md` and navigate to topic files via wiki-links as needed.
 
-**File organization is up to PI.** Create, split, merge, or rename files freely as research evolves. There is no requirement to maintain fixed file names. The only constraint is to keep `index.md` as the entry point and keep the note list current.
+**Purpose**: Distill the raw materials in `research/work/` into curated, structured knowledge. Worker deliverables are provisional and narrow-scoped — notes are where PI synthesizes them into reliable, interconnected understanding. Notes are not session logs or private memos; they are publication-quality knowledge meant to be read by collaborators and to serve as draft material for the paper.
 
-**File splitting criterion**: When a topic requires detailed discussion that cannot fit in a few lines within index.md, separate it into an independent file. Conclusions that fit in a few lines stay directly in index.md. index.md serves as an overview of the entire note collection — lengthy discussions would impair its function as a directory.
+**Quality standard** — each note should satisfy all three criteria:
+1. **Paper-draft material**: Prose, equations, and citations at a level usable in a paper draft
+2. **Collaborator-readable**: A co-researcher unfamiliar with session history can follow the argument and evidence
+3. **Pedagogically clear**: Core concepts are introduced with enough context that a physicist outside the immediate subfield can understand the reasoning
 
-**Writing principle**: Each file should be self-contained (reading that file alone should suffice to understand the topic). Write only what is currently true (current-state approach). For specific update procedures, see the note update procedure in the "Result Collection" section.
+**Wiki-link format** (Obsidian-compatible):
+- `[[note-name]]` — link to another note (filename without extension or path prefix)
+- `[[note-name#heading]]` — link to a specific heading within a note
+- `[[note-name|display text]]` — link with custom display text
+
+**Organization via links, not directories**: The primary organizational mechanism is wiki-links and tags, not folder hierarchy. Directories are optional convenience — PI may use a flat structure, introduce subdirectories, or reorganize freely as the knowledge base grows. What matters is that notes are interconnected through wiki-links and discoverable through index.md.
+
+**Tags**: Use inline tags (`#tag-name`) to classify notes along cross-cutting dimensions (e.g., `#conjecture`, `#verified`, `#key-result`, `#open-question`). Tags complement wiki-links: links express relationships between specific topics, while tags express shared properties across topics.
+
+**index.md (Map of Content)**: The entry point and navigational hub. Contains wiki-linked sections that group notes by theme. Keep entries brief — one line per note with a wiki-link and a one-sentence summary. Detailed discussion belongs in individual notes, not in index.md. The grouping in index.md reflects conceptual structure, not file paths.
+
+**Writing principles**:
+- **Self-contained**: Reading a single note file should suffice to understand the topic. Define terms at first use or link to the defining note via `[[...]]`
+- **Current-state**: Write only what is currently understood to be true. When understanding changes, rewrite the note rather than appending corrections (git preserves history; stale content in notes misleads worker agents who read them for context)
+- **Atomic topics**: Each note covers one coherent topic. When a note grows to cover multiple distinct topics, split it into separate notes and link them
+- **Link generously**: Whenever a note references a concept, method, or result discussed elsewhere, use a wiki-link. The link graph is itself a map of how ideas connect
 
 ## Research Items (project.yaml)
 
@@ -172,13 +191,13 @@ Step 2: [what] — [why] [status, item_id]
 ## Strategy Notes
 [Current approach, reasons for pivots, next focus]
 ```
-- `research/notes/` does not exist → Create the directory and `research/notes/index.md`. index.md should contain a note list (initially empty), current understanding, and research direction. Examples of initial notes (not required, but useful for many research projects):
-  - `glossary.md`: Term definitions. Correspondences and non-correspondences between different frameworks
+- `research/notes/` does not exist → Create the directory and `research/notes/index.md` as the Map of Content. The initial index.md should contain wiki-linked sections grouping notes by theme (initially mostly empty — to be populated as notes are created). Also create initial seed notes as appropriate for the research. Examples (not mandated — adjust to suit the project):
+  - `glossary.md`: Core term definitions. Framework correspondences and distinctions
   - `contributions.md`: Contributions of this research. With structured assessments
-  - `tools.md`: Existing tools (from literature). With sources and verification status
-  - `dead_ends.md`: Attempted approaches and reasons for failure
+  - `existing-tools.md`: Known tools from the literature. With sources and verification status
+  - `dead-ends.md`: Attempted approaches and reasons for failure
 
-  Use a different organization if it doesn't suit the research
+  File organization (flat vs. subdirectories) is PI's choice. Start flat and introduce subdirectories only when the number of notes warrants it
 
 **Verification status**: When mentioning "existing tools" or "contributions of this research" in research notes, attach a tag indicating what means verified the claim. Tag examples: `[sympy]`, `[numerical]`, `[limiting case]`, `[literature: arXiv:XXXX]`, `[unverified]`.
 
@@ -264,7 +283,7 @@ Dynamic data by agent:
 - **scout**: Search direction instructions
 - **reader**: `Assigned paper: arXiv:{id}` / `Title: {title}`
 - **researcher**: `Target: {item_id} — {description}` / `kind: {kind}` / `Context: {role of this item within the parent narrative/task}` / previous attempt path / PI's critique (see below)
-- **critic**: `Target: {item_id} — {description}` / `attempt path: {path}` / `kind: {kind}`
+- **critic**: `Target: {item_id} — {description}` / `attempt path: {path}` / `kind: {kind}` / `mode: blind` or `mode: contextual` (see below)
 - **engine-builder**: `Model definition` (Hamiltonian, lattice structure, boundary conditions) / `Computational method` (Monte Carlo, molecular dynamics, etc.) / `Required features` (which observables/update algorithms needed) / existing module path if any
 - **simulator**: `Target: {item_id}` / `Physical setup` / `Mathematical definition of observables` / `Success criteria` (what to compare against and what constitutes verification success) / `Deliverable number: {N}` (serial number managed by PI) / file paths to related theoretical results / `simulations/lib/` module list (if empty, run engine-builder first)
   ※ Implementation of measurement logic and language choice are simulator's responsibility (see simulator.md)
@@ -297,6 +316,13 @@ Retrieve deliverable paths from task return values and Read deliverables directl
 - Does each step's why still hold? (New findings can change motivations)
 - Should the item structure be refactored? (reframe, reorganize parent-child relationships, drop unnecessary items)
 
+**Critic verification mode**: When dispatching critic, specify `mode: blind` or `mode: contextual` based on the task nature:
+
+- **Blind mode**: For mechanical/mathematical checks — equation correctness, sign/factor verification, dimensional analysis, limiting behavior. Critic reads only the attempt file, without knowing the research intent. This eliminates expectation bias: the critic judges whether the mathematics is internally consistent, not whether it matches what the research hopes to show
+- **Contextual mode**: For logical/value judgments — reasoning gaps, implicit assumptions, compatibility with the broader framework, sufficiency for its role in the Story Arc. Critic reads project.yaml, notes, and plan.md to understand the full context
+
+Rule of thumb: "Does the critic need to know the research purpose to perform this check?" — No → blind, Yes → contextual.
+
 **Researcher resubmission (iterative deepening)**: Researcher attempts are verified by **critic**. Critic performs mechanical verification (equation checking via SymPy/numerical computation) and logical analysis (evaluation of reasoning structure and implicit assumptions) through 2 channels, annotating the attempt file directly (strikethrough + comments + Critique section at the end). PI decides the next action based on critic's verdict:
 - **ACCEPT**: Reflect in notes (relevant file in `research/notes/`, with verification status) and update the item's status
 - **REVISE**: Pass the annotated attempt's path to researcher for resubmission. Researcher reads annotations and writes a new attempt addressing the feedback
@@ -313,16 +339,33 @@ Not every attempt needs to go through critic — PI may accept clearly high-qual
 
 **Simulator resubmission**: If simulator returns partial results (insufficient parameter range, insufficient statistical precision, algorithm improvement needed, etc.), PI can instruct additional computation and resubmit. On resubmission, pass the previous deliverable path and existing code path, and specify concretely what to improve. For additional computation on the same physical setup/observables, update the same deliverable number; for changed setup or observables, create a new number
 
-**Note update procedure** (Edit relevant files in `research/notes/`):
-1. **Select target**: Check the note list in index.md and write in the most appropriate file. If no suitable file exists, create a new one and add it to the index.md list
+**Note capture** (record findings while they are fresh — prose quality and linking are handled in §4 Note Curation):
+1. **Select target**: Check index.md and write in the most appropriate note file. If no suitable file exists, create a new note and add a `[[wiki-link]]` entry to index.md
 2. **Contradiction check**: If new findings contradict existing descriptions, fix or delete existing content before writing
 3. **Attribution check**: Attach sources and verification status to existing literature results. For contributions of this research, only record judgments that have gone through assessment (§Contribution assessment)
 4. **Verification state check**: When writing specific claims about external papers, confirm that the paper is `read` in reading_list.md
-5. **Read critically, write in your own words**: Do not take worker reports at face value; describe as PI's own understanding. After writing, reread from the perspective of "someone reading only this file"
-6. **Annotations on worker deliverables**: If errors are found in reading/attempt notes, annotate the original file directly (`~~error~~ [→ correction]`)
-7. **Update index.md**: Reflect changes in the note list and file guide
+5. **Annotations on worker deliverables**: If errors are found in reading/attempt notes, annotate the original file directly (`~~error~~ [→ correction]`)
 
-### 4. Next Cycle (Return to Step 1)
+### 4. Note Curation
+
+Dedicated phase for transforming raw captures and work/ deliverables into polished, wiki-linked knowledge base entries. §3's note capture records findings quickly; this phase ensures the knowledge base meets its quality standard.
+
+**When to run this phase**: Every cycle where notes were updated in §3, or where unprocessed work/ deliverables remain. If the cycle produced no new knowledge (e.g., only launched tasks), skip to §5.
+
+**Procedure**:
+
+1. **Distill from work/ → notes/**: Review deliverables produced this cycle (attempt files, reading notes, simulation reports). Extract the essential knowledge — rewritten in PI's own words, not copied — and integrate into the appropriate note files. Worker reports are raw material; notes are the curated product
+2. **Polish to quality standard**: For each note touched this cycle, reread from the perspective of a collaborator seeing it for the first time. The three criteria from the quality standard (paper-draft material, collaborator-readable, pedagogically clear) are the benchmark. Concretely:
+   - Motivation is stated (why this topic matters to the research)
+   - Key terms are defined at first use or linked via `[[...]]`
+   - Claims carry sources and verification status tags
+   - Equations are derived or contextualized, not dropped in without explanation
+   - The note reads as a coherent mini-document, not a collection of bullet points
+3. **Link and tag**: Add wiki-links (`[[...]]`) wherever a note references a concept, method, or result discussed in another note. Add tags (`#tag-name`) for cross-cutting classification. Check that existing wiki-links still point to the right targets (note renames can break links)
+4. **Update index.md**: Ensure every note has a wiki-link entry in index.md with a one-sentence summary. Re-examine the thematic grouping — as the knowledge base grows, reorganize sections in index.md to reflect the current conceptual structure
+5. **Split or merge**: If a note has grown to cover multiple distinct topics, split it into atomic notes and link them. If two small notes overlap substantially, merge them
+
+### 5. Next Cycle (Return to Step 1)
 
 ---
 
@@ -331,11 +374,13 @@ Not every attempt needs to go through critic — PI may accept clearly high-qual
 End the session when MAX_CYCLES is reached or PI judges completion.
 No need to rush and sacrifice quality to finish the session — the next `/run` can resume from where you left off.
 
-1. **Note coherence check** (if notes were changed during the session):
+1. **Knowledge base coherence check** (if notes were changed during the session):
    - Launch **self-check agent** (opus) in the background to verify changed note files as a first-time reader. PI is too familiar with the research context to notice undefined terms or terminology confusion — an agent without context detects this kind of problem
    - In parallel, PI checks:
+     - Whether wiki-links point to existing notes (no broken `[[...]]` links)
      - Whether referenced attempt file state descriptions are current
      - Whether claims superseded during the session remain
+     - Whether index.md reflects the current note collection (no orphan notes missing from the MOC)
    - Receive self-check results and Edit based on valid findings
 2. Update `project.yaml`'s `last_run` to the current datetime
 3. If there are items to discuss in a meeting, Write to `research/agenda.md`:

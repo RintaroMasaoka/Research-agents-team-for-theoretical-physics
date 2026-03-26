@@ -25,6 +25,14 @@ Loading large amounts of data into prompts wastes context window. Writing to fil
 Write a work summary to `logs/{agent}_{timestamp}.md`.
 This is a record for humans to review progress later, not a decision input for PI.
 
+## Research Notes Format
+
+`research/notes/` is an Obsidian-compatible wiki-linked knowledge base maintained by PI. These notes are **read-only** for worker agents (same rule as project.yaml). Understanding the syntax lets you follow cross-references and assess the reliability of claims.
+
+- **Wiki-links**: `[[note-name]]`, `[[note-name#heading]]`, `[[note-name|display text]]` — references to other note files. To follow a link, find the file matching the note-name (with `.md` extension) under `research/notes/`
+- **Tags**: `#tag-name` — inline classification labels (e.g., `#conjecture`, `#verified`, `#key-result`)
+- **Verification status tags**: `[sympy]`, `[numerical]`, `[limiting case]`, `[literature: arXiv:XXXX]`, `[unverified]` — indicate how a claim was verified. Treat `[unverified]` claims with appropriate caution; do not cite them as established results
+
 ## Constraints
 
 - Write equations in LaTeX notation (inline: `$...$`, display: `$$...$$`). Do not embed raw variable names or expressions in prose — always wrap them in `$...$`. Prioritize readability in Markdown files; use `$$` instead of LaTeX environment names
