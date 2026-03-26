@@ -38,13 +38,14 @@ simulations/
 ### 1. Design
 
 Before writing code, clarify the following:
+- **What modules to use**: Check `simulations/lib/` APIs. If insufficient, record in deliverable
+- **Check existing scripts**: Search `simulations/src/` for scripts measuring the same or similar observables. Extend an existing script rather than creating a new file when possible — accumulating parallel scripts makes the codebase harder to navigate. Record the decision in the deliverable
 - **What to compute**: Mathematical definition of observables (from PI's instructions and theoretical results. If ambiguous, choose the most natural interpretation and record it in the deliverable)
-- **What modules to use**: Check if existing APIs suffice. If not, record in deliverable
 - **How to confirm correctness**: Verification plan (see verification protocol in §2)
 
 ### 2. Implementation and Verification Iteration
 
-Write a single script `src/{slug}.{ext}`, verifying and improving it with Edit. The script loads modules from `lib/` and implements only the measurement logic. Language: **{{ simulation.language }}** (matches the modules).
+Write or extend a script in `src/`. If extending an existing script (per §1), use Edit; if creating a new one, write `src/{slug}.{ext}`. The script loads modules from `lib/` and implements only the measurement logic. Language: **{{ simulation.language }}** (matches the modules).
 
 Code principles:
 - Specify parameters via command-line arguments or constants at the script's top

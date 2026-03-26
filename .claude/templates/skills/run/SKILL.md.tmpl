@@ -54,7 +54,7 @@ simulations/               # Numerical computations
   src/                     # Measurement scripts (managed by simulator)
   results/{slug}/          # Per-task output data + figures
   test/                    # Module tests (managed by engine-builder)
-  archive/                 # Old scripts (PI moves here during framework migration)
+  src/archive/             # Retired scripts (superseded versions, abandoned experiments)
 logs/                      # Progress records for humans + session handoff
   last_session.md          # Summary of the last /run session (carries PI's thinking to the next session)
 meetings/                  # Meeting minutes
@@ -280,7 +280,7 @@ Dynamic data by agent:
 - **researcher**: `Target: {item_id} — {description}` / `kind: {kind}` / `Context: {role of this item within the parent narrative/task}` / previous attempt path / PI's critique (see below)
 - **critic**: `Target: {item_id} — {description}` / `attempt path: {path}` / `kind: {kind}`
 - **engine-builder**: `Model definition` (Hamiltonian, lattice structure, boundary conditions) / `Computational method` (Monte Carlo, molecular dynamics, etc.) / `Required features` (which observables/update algorithms needed) / existing module path if any
-- **simulator**: `Target: {item_id}` / `Physical setup` / `Mathematical definition of observables` / `Success criteria` (what to compare against and what constitutes verification success) / `Deliverable number: {N}` (serial number managed by PI) / file paths to related theoretical results / `simulations/lib/` module list (if empty, run engine-builder first)
+- **simulator**: `Target: {item_id}` / `Physical setup` / `Mathematical definition of observables` / `Success criteria` (what to compare against and what constitutes verification success) / `Deliverable number: {N}` (serial number managed by PI) / file paths to related theoretical results / `simulations/lib/` module list (if empty, run engine-builder first) / `Existing scripts in src/: {list of potentially related scripts}` (PI lists scripts that may overlap with the new task so simulator can reuse them)
   ※ Implementation of measurement logic and language choice are simulator's responsibility (see simulator.md)
 
 ### 3. Result Collection & State Update
@@ -360,14 +360,20 @@ No need to rush and sacrifice quality to finish the session — the next `/run` 
 
 **Do not suggest transitioning to `/write`** in the final report or elsewhere. The user decides when the research is mature enough for writing. `/run`'s job is to deepen understanding, not to move toward paper production.
 
-1. **Final coherence check** (if notes or plan.md were changed during the session):
+1. **Simulation housekeeping** (if simulator ran during the session):
+   Batch cleanup at session end is more efficient than per-cycle cleanup because multiple simulator tasks may touch overlapping scripts within a session.
+   - List all scripts in `simulations/src/` and check for:
+     - **Superseded scripts**: A newer version exists (e.g., `foo.jl` superseded by `foo_v2.jl`). Move the old version to `src/archive/` and rename the new version to drop the suffix, updating any references
+     - **Dead scripts**: Scripts from abandoned experiments that no longer serve any active or stable item. Move to `src/archive/`
+   - When in doubt, keep the script — archiving can happen in a later session. `src/archive/` preserves files for reference (searchable via Grep) while keeping the active workspace clean. Record moves in `logs/last_session.md`
+2. **Final coherence check** (if notes or plan.md were changed during the session):
    - Per-cycle self-checks verify individual files; this step catches cross-file issues. PI checks:
      - Whether referenced attempt file state descriptions are current
      - Whether claims superseded during the session remain
      - Whether terminology is consistent across files (per-cycle checks cover within-file usage; this catches divergence between files)
    - If substantial issues are found, run self-check on the affected files and fix before proceeding
-2. Update `project.yaml`'s `last_run` to the current datetime
-3. If there are items to discuss in a meeting, Write to `research/agenda.md`:
+3. Update `project.yaml`'s `last_run` to the current datetime
+4. If there are items to discuss in a meeting, Write to `research/agenda.md`:
    ```markdown
    # Meeting Agenda
 
@@ -380,14 +386,14 @@ No need to rush and sacrifice quality to finish the session — the next `/run` 
    - Each item should clearly state "**what about**" and "**what decision is needed**"
 
    Don't write if there's nothing to discuss. If an existing agenda.md exists, overwrite rather than append.
-4. Write a session summary to `logs/last_session.md` **(overwrite — keep only the latest session)**:
+5. Write a session summary to `logs/last_session.md` **(overwrite — keep only the latest session)**:
    A file to carry "PI's thought flow" that doesn't fit in notes or plan.md to the next session. Don't worry about format — write whatever would be useful to your future self.
-5. Git commit:
+6. Git commit:
    ```bash
    git add -A && git commit -m "run: {concise summary of achievements}"
    ```
    (All research files belong to the project, so commit concisely with `git add -A`. Risk of including sensitive files is low)
-6. Display the final report to the user:
+7. Display the final report to the user:
    - Work performed and results
    - Deliverable paths
    - Items summary

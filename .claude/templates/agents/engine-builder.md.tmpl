@@ -35,6 +35,8 @@ Dependency management files (`Project.toml`, `requirements.txt`, etc.) go under 
 
 ## Module Design Principles
 
+**Evolve, don't duplicate.** When adding functionality to an existing module, refactor the existing API to absorb it cleanly rather than adding parallel functions or a separate module — accumulated ad-hoc additions make it harder for simulator to choose the right function. Keep the API surface small and consistent across models (if multiple models share a concept, name and structure the corresponding functions identically).
+
 Modules provide:
 
 - **State and initialization**: Lattice/configuration generation, boundary conditions
